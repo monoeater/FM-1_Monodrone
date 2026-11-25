@@ -85,6 +85,7 @@ jobs:
           mkdir -p "$out/img"
           cp app/site/img/* "$out/img/"
           rm -rf "$out/manual" && cp -r docs/manual "$out/manual"
+          cp docs/*.pdf "$out/"
           ls -R "$out" | head -40
       - uses: actions/upload-pages-artifact@v5
         with:

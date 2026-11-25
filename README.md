@@ -9,7 +9,8 @@ A drone instrument for the M-VAVE FM-1. Four layers of held chords from one of t
   `python3 base/tools/fm1_install.py monodrone-X.Y.fwsc`. To go back to stock, hold OCT− while switching on and
   install M-VAVE's firmware.
 - **Manual:** [monoeater.github.io/FM-1_Monodrone/manual](https://monoeater.github.io/FM-1_Monodrone/manual/), an
-  interactive panel with every control, page, macro, punch, engine and scene (source in `docs/manual/`).
+  interactive panel with every control, page, macro, punch, engine and scene (source in `docs/manual/`). As PDFs, 11
+  landscape A4 pages: [screen](docs/MONODRONE-manual.pdf) (dark) and [print](docs/MONODRONE-manual-print.pdf) (light).
 - **Try it:** the [browser emulator](https://monoeater.github.io/FM-1_Monodrone/emu/).
 
 Firmware identity: `FM-1_77` followed by the version (1.0 is `FM-1_77010000`).
