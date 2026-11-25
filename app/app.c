@@ -761,8 +761,10 @@ static void input(void)
 
     /* the buttons */
     if ((bdown >> B_HOME) & 1u) ui.home_used = 0;
-    if (!((btn >> B_HOME) & 1u) && ((ui.btn >> B_HOME) & 1u) && !ui.home_used)   /* HOME tapped: the layer's pages in turn */
-        page_set(ui.page == PG_LAYER ? PG_SHAPE : ui.page == PG_SHAPE ? PG_OUT : PG_LAYER);
+    if (!((btn >> B_HOME) & 1u) && ((ui.btn >> B_HOME) & 1u) && !ui.home_used) {  /* HOME tapped: the layer's pages in turn; */
+        if (ui.fxmode) { ui.fxmode = 0; app_say("KEYS", "NOTES"); page_set(PG_LAYER); }   /* in FX mode, out of it to LAYER */
+        else page_set(ui.page == PG_LAYER ? PG_SHAPE : ui.page == PG_SHAPE ? PG_OUT : PG_LAYER);
+    }
     if ((bdown >> B_EDIT) & 1u) page_set(PG_SHAPE);
     /* ENV: pressed elsewhere, MACRO; let go on MACRO or MACRO 2 with nothing done, the next (MACRO, MACRO 2, GLOBAL).
      * Held, a macro knob snaps: clockwise full, anticlockwise off. Held + GLO: every macro off (as MONOEATER.HARSH) */
@@ -1061,6 +1063,7 @@ int app_expect(const char *what, int *got)
 {
     if (!strcmp(what, "sel")) *got = ui.sel;
     else if (!strcmp(what, "page")) *got = ui.page;
+    else if (!strcmp(what, "fxmode")) *got = ui.fxmode;
     else if (!strcmp(what, "scene")) *got = st.cur;
     else if (!strcmp(what, "octave")) *got = octave;
     else if (!strcmp(what, "punch")) *got = C->punch;

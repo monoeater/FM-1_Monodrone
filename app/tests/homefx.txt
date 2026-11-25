@@ -1,0 +1,12 @@
+# HOME in FX mode: out of FX mode, on the LAYER page; latched punches carry on
+wait 1000
+tap FX
+wait 100
+expect fxmode 1
+tap HOME
+wait 100
+expect fxmode 0
+expect page 0
+tap HOME
+wait 100
+expect page 1

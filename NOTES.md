@@ -223,3 +223,6 @@ its own records (magic `MDNO`), so another firmware's data never confuses it.
 
 ## Hub prep
 - Identity prefix FM-1_77 (dev FM-1_7700; release 0.0.1 = FM-1_77000001, 1.0 = FM-1_77010000). LICENSE (MPL-2.0), fmhub.json, docs/img/screen.png, fm1.toml author/description/tags/screenshot. Still needed for a release build: repo, install.
+
+## L33: HOME leaves FX mode
+- HOME tapped in FX mode: FX mode off (KEYS NOTES), the LAYER page; latched punches carry on. Test: homefx.txt.
