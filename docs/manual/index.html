@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MONODRONE Manual</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one long dark page in the instrument's own colours; a live panel up top you click to learn, then reference sections. */
+:root{
+  --bg:#0a0b09; --panel:#14160f; --raise:#1c1f17; --line:#30342a; --ash:#8f9180; --text:#d6d2ba; --dim:#a9ab98;
+  --tox:#aae628; --rust:#e27022; --ice:#96c8c4; --rose:#e06a98; --body:#1e201a; --key:#d6d2ba; --bkey:#9a9a86;
+  --f-disp:'Barlow Semi Condensed','Arial Narrow',sans-serif; --f-body:'Barlow',system-ui,sans-serif; --f-mono:'IBM Plex Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box} img{max-width:100%} [hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--text);font:16px/1.55 var(--f-body);margin:0}
+a{color:var(--tox)} a:hover{color:var(--text)}
+:focus-visible{outline:2px solid var(--tox);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-disp);font-weight:800;letter-spacing:.04em;text-wrap:balance;margin:0}
+h2{font-size:clamp(28px,4vw,40px);color:var(--tox);line-height:1}
+h3{font-size:19px;font-weight:700;letter-spacing:.08em;color:var(--ice)}
+p{margin:0;max-width:68ch}
+.k{font-family:var(--f-mono);font-weight:600;font-size:.78em;color:var(--bg);background:var(--text);border-radius:3px;padding:1px 5px;white-space:nowrap}
+.eyebrow{font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.16em;color:var(--ash);text-transform:uppercase}
+.pix{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* nav */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;gap:18px;height:52px}
+nav.top .brand{font-family:var(--f-disp);font-weight:800;font-size:20px;letter-spacing:.06em;color:var(--tox);text-decoration:none}
+nav.top .links{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+nav.top .links::-webkit-scrollbar{display:none}
+nav.top .links a{font-family:var(--f-disp);font-weight:600;font-size:14px;letter-spacing:.1em;color:var(--dim);text-decoration:none;padding:6px 9px;border-radius:5px;white-space:nowrap}
+nav.top .links a:hover{color:var(--text);background:var(--raise)}
+
+/* hero */
+.hero{padding-block:44px 30px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:36px;align-items:center}
+.hero h1{font-size:clamp(52px,9vw,104px);line-height:.86;color:var(--tox)}
+.hero .tagline{font-family:var(--f-disp);font-weight:700;font-size:clamp(17px,2vw,21px);letter-spacing:.14em;color:var(--rust);margin-top:14px}
+.hero .lede{margin-top:18px;color:var(--text);font-size:17px}
+.hero .facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px;font-family:var(--f-disp);font-weight:600;letter-spacing:.1em;font-size:14px;color:var(--ash)}
+.hero .facts b{color:var(--text);font-weight:700}
+.scope{border:1px solid var(--line);background:#000;position:relative}
+.anim{width:100%;aspect-ratio:240/88;background-size:100% 1200%;background-repeat:no-repeat;animation:frames 2.2s steps(12,jump-none) infinite}
+@keyframes frames{from{background-position:0 0}to{background-position:0 100%}}
+@media (prefers-reduced-motion:reduce){.anim{animation:none}}
+.scope .lbl{position:absolute;left:10px;top:10px;font-family:var(--f-mono);font-size:12px;color:var(--text);background:var(--bg);border:1px solid var(--text);padding:0 6px}
+.placebar{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.placebar button{font:600 12px var(--f-mono);letter-spacing:.06em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:4px;padding:3px 8px;cursor:pointer}
+.placebar button[aria-pressed="true"]{color:var(--bg);background:var(--text);border-color:var(--text)}
+
+section{padding-block:56px 8px}
+section .head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;border-bottom:2px solid var(--tox);padding-bottom:10px;margin-bottom:24px}
+section.fx .head{border-color:var(--rust)} section.fx h2{color:var(--rust)}
+
+/* explorer */
+.mods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
+.mods .eyebrow{margin-right:6px}
+.mods button{font:700 14px var(--f-disp);letter-spacing:.08em;color:var(--text);background:var(--raise);border:1.5px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer}
+.mods button:hover{border-color:var(--ash)}
+.mods button[aria-pressed="true"]{background:var(--tox);color:var(--bg);border-color:var(--tox)}
+.mods button.fxm[aria-pressed="true"]{background:var(--rust);border-color:var(--rust)}
+.explore{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:22px;align-items:start}
+.panelbox{min-width:0}
+svg.panel{width:100%;height:auto;display:block;user-select:none}
+.ctl{cursor:pointer}
+.ctl .face{transition:stroke .12s,fill .12s}
+.ctl:hover .face,.ctl:focus-visible .face{stroke:var(--tox);stroke-width:6}
+.ctl.sel .face{stroke:var(--tox);stroke-width:8}
+.ctl.off{opacity:.28}
+.ctl.on .face{stroke:var(--tox)}
+.ctl:focus{outline:none}
+.hint{font-size:13px;color:var(--ash);margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.detail{position:sticky;top:72px}
+.detail .name{font-family:var(--f-disp);font-weight:800;font-size:30px;letter-spacing:.05em;line-height:1;color:var(--text)}
+.detail .what{color:var(--dim)}
+.acts{display:flex;flex-direction:column;gap:0}
+.act{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.4}
+.act.hi{background:linear-gradient(90deg,color-mix(in srgb,var(--tox) 12%,transparent),transparent)}
+.g{font:600 11.5px var(--f-mono);letter-spacing:.04em;color:var(--ice);padding-top:2px}
+.act .g b{color:var(--tox);font-weight:600}
+.minitbl{width:100%;border-collapse:collapse;font-size:14px}
+.minitbl td{padding:4px 0;border-top:1px solid var(--line);vertical-align:top}
+.minitbl td:first-child{font:600 11.5px var(--f-mono);color:var(--ash);width:96px;padding-top:6px}
+
+/* generic lists */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:s}
+.step{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:2px solid var(--line)}
+.step .n{font:800 34px var(--f-disp);color:var(--tox);line-height:1}
+.prose{display:flex;flex-direction:column;gap:12px}
+.prose h3{margin-top:8px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:7px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.45}
+.row:last-child{border-bottom:1px solid var(--line)}
+.row .l{font-family:var(--f-disp);font-weight:700;letter-spacing:.06em;color:var(--ice)}
+.shot{width:100%;max-width:240px;aspect-ratio:1;border:1px solid var(--line);display:block}
+.pagecard{display:grid;grid-template-columns:200px minmax(0,1fr);gap:18px}
+.pagecard .shots{display:flex;flex-direction:column;gap:8px}
+.btnchip{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:36px;padding:0 10px;border-radius:7px;background:var(--raise);border:1.5px solid var(--line);font:700 15px var(--f-disp);letter-spacing:.06em;color:var(--text)}
+.pg{margin-top:6px}
+.pg .pn{font-family:var(--f-disp);font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--tox);margin-bottom:2px}
+.kt{width:100%;border-collapse:collapse;font-size:14.5px}
+.kt td{padding:5px 8px 5px 0;border-top:1px solid var(--line);vertical-align:top;line-height:1.4}
+.kt td.kn{font:600 12px var(--f-mono);color:var(--ice);width:84px;padding-top:7px;white-space:nowrap}
+.kt td.kr{font:500 12px var(--f-mono);color:var(--ash);width:116px;padding-top:7px;text-align:right}
+.tblwrap{overflow-x:auto}
+table.big{width:100%;border-collapse:collapse;font-size:15px;min-width:620px}
+table.big th{text-align:left;font:600 12px var(--f-disp);letter-spacing:.14em;color:var(--ash);text-transform:uppercase;padding:6px 10px 6px 0;border-bottom:1px solid var(--line)}
+table.big td{padding:8px 10px 8px 0;border-top:1px solid var(--line);vertical-align:top;line-height:1.4}
+.en{font-family:var(--f-disp);font-weight:700;font-size:17px;letter-spacing:.06em}
+.mono{font:500 12.5px var(--f-mono);color:var(--ice)}
+.scenes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.scene{display:flex;flex-direction:column;gap:6px;background:transparent;border:0;padding:0;text-align:left;color:inherit;font:inherit}
+.scene img{width:100%;aspect-ratio:240/88;border:1px solid var(--line);display:block}
+.scene .sn{display:flex;gap:8px;align-items:baseline}
+.scene .num{font:600 12px var(--f-mono);color:var(--ash)}
+.scene .nm{font:700 17px var(--f-disp);letter-spacing:.08em;color:var(--tox)}
+.scene .ds{font-size:14px;color:var(--dim);line-height:1.35}
+.scene .pl{font:600 11px var(--f-mono);letter-spacing:.06em;color:var(--ice)}
+.places{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.place .anim{border:1px solid var(--line)}
+.place .t{font:700 15px var(--f-disp);letter-spacing:.12em;color:var(--ice);margin-top:6px}
+.place .d{font-size:13.5px;color:var(--dim);line-height:1.35}
+.kbd{position:relative;height:190px;min-width:760px}
+.kbd .w,.kbd .b{position:absolute;top:0;border-radius:0 0 8px 8px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font:600 11px var(--f-mono);cursor:pointer;border:0;padding:0 0 7px}
+.kbd .w{width:44px;height:180px;background:var(--key);color:#4a4d40}
+.kbd .b{width:34px;height:116px;background:#24271f;border:1.5px solid var(--rust);color:var(--rust);z-index:1;padding-bottom:0;justify-content:center}
+.kbd .b span,.kbd .w span.v{writing-mode:vertical-rl;transform:rotate(180deg);font:700 12.5px var(--f-disp);letter-spacing:.06em;white-space:nowrap}
+.kbd .w.rot{background:var(--tox);color:var(--bg)}
+.kbd .b[aria-pressed="true"]{background:var(--rust);color:var(--bg)}
+.kbd .w[aria-pressed="true"]{outline:3px solid var(--rust);outline-offset:-3px}
+.punchdetail{min-height:150px}
+.search{width:100%;max-width:420px;font:16px var(--f-body);color:var(--text);background:var(--panel);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+.search:focus{border-color:var(--tox);outline:none}
+.tag{display:inline-block;font:600 11px var(--f-mono);padding:1px 6px;border-radius:3px;background:var(--raise);color:var(--ice);white-space:nowrap}
+.lights .sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+footer{padding-block:60px 50px;color:var(--ash);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:18px}
+.note{font-size:14px;color:var(--ash)}
+.anat{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;align-items:start}
+.anat .pins{position:relative}
+.anat .pins img{width:100%;display:block;border:1px solid var(--line)}
+.pin{position:absolute;width:22px;height:22px;border-radius:11px;background:var(--tox);color:var(--bg);font:800 13px var(--f-disp);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+.nlist{display:flex;flex-direction:column;gap:8px}
+.nlist div{display:flex;gap:10px;font-size:15px}
+.nlist .pin{position:static;flex:none}
+
+@media (max-width:980px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .explore{grid-template-columns:minmax(0,1fr)}
+  .detail{position:static}
+  .scenes,.places{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid3{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:720px){
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .pagecard{grid-template-columns:minmax(0,1fr)}
+  .pagecard .shots{flex-direction:row}
+  .pagecard .shots img{max-width:48%}
+  .row{grid-template-columns:minmax(0,1fr);gap:2px}
+  .act{grid-template-columns:minmax(0,1fr);gap:2px}
+  .anat{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:460px){.scenes,.places,.steps{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#top">MONODRONE</a>
+  <div class="links">
+    <a href="#explore">Panel</a><a href="#start">Start</a><a href="#playing">Playing</a><a href="#pages">Pages</a><a href="#macros">Macros</a><a href="#fx">FX</a><a href="#engines">Engines</a><a href="#scenes">Scenes</a><a href="#commands">All commands</a><a href="#lights">Lights</a><a href="#install">Install</a>
+  </div>
+</div></nav>
+
+<header class="wrap hero" id="top">
+  <div>
+    <div class="eyebrow">A drone instrument for the M-VAVE FM-1</div>
+    <h1>MONO<br>DRONE</h1>
+    <div class="tagline">MUSIC FOR IRRADIATED LANDSCAPES</div>
+    <p class="lede">Four layers of drone, each a held chord on one of twelve engines, all running into one chain of dirt, filter, tape delay and reverb. There is no sequencer. You set things running, bend them live, and move between scenes.</p>
+    <div class="facts"><span><b>4</b> LAYERS</span><span><b>12</b> ENGINES</span><span><b>12</b> PUNCH EFFECTS</span><span><b>8</b> MACROS</span><span><b>16</b> SCENES</span><span><b>8</b> PLACES</span></div>
+  </div>
+  <div>
+    <div class="scope"><div class="anim pix" id="heroAnim" role="img" aria-label="An animated 1-bit place from the screen"></div><span class="lbl" id="heroLbl">REACTOR</span></div>
+    <div class="placebar" id="placebar" aria-label="Places"></div>
+  </div>
+</header>
+
+<section class="wrap" id="explore">
+  <div class="head"><h2>THE PANEL</h2><span class="eyebrow">Click any control · pick what you're holding</span></div>
+  <div class="mods" id="mods" role="group" aria-label="What you are holding"><span class="eyebrow">Holding</span></div>
+  <div class="explore">
+    <div class="panelbox">
+      <svg class="panel" id="panel" viewBox="0 0 2000 1280" aria-label="The FM-1 panel"></svg>
+      <div class="hint" id="hint">Each control lists everything it does. The buttons above the panel show what changes while you hold SEL, SAVE, GLO, ENV or HOME, or while FX mode is on.</div>
+    </div>
+    <aside class="card detail" id="detail" aria-live="polite"></aside>
+  </div>
+</section>
+
+<section class="wrap" id="start">
+  <div class="head"><h2>QUICK START</h2><span class="eyebrow">Sound in under a minute</span></div>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><p>Press <span class="k">PLAY</span>. The scene swells in over each layer's SWELL time.</p></div>
+    <div class="step"><span class="n">2</span><p>Play a chord on the keys and let go. It keeps sounding: chords latch.</p></div>
+    <div class="step"><span class="n">3</span><p>Turn <span class="k">K1</span>–<span class="k">K4</span> to shape the layer, <span class="k">ALGORITHM</span> to change its engine, <span class="k">PRESETS</span> to move to another scene.</p></div>
+    <div class="step"><span class="n">4</span><p>Tap <span class="k">FX</span> and hold a black key for a punch effect. Tap <span class="k">FX</span> again to play notes.</p></div>
+  </div>
+</section>
+
+<section class="wrap" id="playing">
+  <div class="head"><h2>PLAYING</h2><span class="eyebrow">Layers · chords · the screen</span></div>
+  <div class="grid2">
+    <div class="prose">
+      <h3>CHORDS THAT STAY</h3>
+      <p>Every key plays a note on the selected layer. Keys held together build a chord of up to four notes; a fifth replaces the last. Let go and the chord keeps sounding. The next key you play afresh starts a new chord, and the voices glide from the old notes to the new over the layer's GLIDE time (3 ms by default).</p>
+      <p>Press harder on a held key and the chord swells louder and brighter. <span class="k">OCT−</span> <span class="k">OCT+</span> move the keyboard through six octave positions; it starts on F1–G3. Hold <span class="k">SEL</span> and tap them to move the selected layer's chord itself an octave down or up.</p>
+      <h3>FOUR LAYERS</h3>
+      <p><span class="k">SELECT</span> picks layer 1–4, and <span class="k">ALGORITHM</span> changes its engine. While you hold a chord, the knobs and ALGORITHM act on that chord's layer.</p>
+      <p><span class="k">PLAY</span> brings the whole scene in or out and remembers which layers were in. <span class="k">SEQ</span> brings the selected layer in or out. Hold <span class="k">GLO</span> and tap white keys 1–4 to bring single layers in or out. Changing notes never brings a layer back in.</p>
+      <h3>HOLDING THE SOUND</h3>
+      <p><span class="k">ARP</span> freezes the reverb and the delay: whatever is in them hangs forever. <span class="k">REC</span> makes the SMEAR engine's memory record (lit) or hold what it has.</p>
+      <h3>TRY THINGS, THEN SNAP BACK</h3>
+      <p>Hold <span class="k">SEL</span> and turn anything on any page. Let go and every knob springs back to where it was. A scene recalled or a MUTATE (<span class="k">SEL</span> + <span class="k">PLAY</span>) while SEL is held stays.</p>
+      <h3>MIDI</h3>
+      <p>USB or the TRS jack. Notes in build chords like the keys. CC1 the layer's K1 · CC7 its level · CC74 cutoff · CC71 resonance · CC91 reverb mix · CC93 delay mix · CC120/123 all notes off · aftertouch is key pressure.</p>
+    </div>
+    <div class="prose">
+      <h3>THE SCREEN</h3>
+      <div class="anat">
+        <div class="pins">
+          <img class="pix" src="img/s_layer.png" alt="The MONODRONE screen on the LAYER page" width="240" height="240">
+          <span class="pin" style="left:62%;top:-2%">1</span>
+          <span class="pin" style="left:88%;top:16%">2</span>
+          <span class="pin" style="left:88%;top:55%">3</span>
+          <span class="pin" style="left:88%;top:83%">4</span>
+        </div>
+        <div class="nlist">
+          <div><span class="pin">1</span><span>Scene number and name, the page you're on, and the CPU load (red if it overloads).</span></div>
+          <div><span class="pin">2</span><span>The scene's place, alive: smoke, dust, sparks and weather move over it, and punches tear into it.</span></div>
+          <div><span class="pin">3</span><span>The four layers: engine, chord root (+ how many more notes) and level. The bright row is the selected layer.</span></div>
+          <div><span class="pin">4</span><span>What K1–K4 do on this page, and their values. Messages show here too: SAVED, LATCHED, FOR NOW.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="pages">
+  <div class="head"><h2>PAGES AND KNOBS</h2><span class="eyebrow">Each button opens pages · K1–K4 follow them</span></div>
+  <div class="grid2" id="pagecards"></div>
+</section>
+
+<section class="wrap" id="macros">
+  <div class="head"><h2>THE MACROS</h2><span class="eyebrow">ENV · MACRO and MACRO 2</span></div>
+  <div class="grid2">
+    <div class="prose">
+      <p>Each macro moves many settings at once, on top of yours. At 0 they do nothing; the top 40 % goes much further. They are not saved with scenes: they're for playing. The level is trimmed as they push, so a full macro doesn't simply get louder.</p>
+      <div id="macrolist"></div>
+    </div>
+    <div class="prose">
+      <img class="shot pix" src="img/s_macro.png" alt="The MACRO page" width="240" height="240" style="max-width:300px">
+      <div class="card">
+        <h3>QUICK MOVES</h3>
+        <p>Hold <span class="k">ENV</span> and turn a macro knob: clockwise jumps to full, anticlockwise to off.</p>
+        <p>Hold <span class="k">ENV</span> and press <span class="k">GLO</span>: every macro off.</p>
+        <p>Press <span class="k">ENV</span> from any other page to land on MACRO. On MACRO, press again for MACRO 2, then GLOBAL.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap fx" id="fx">
+  <div class="head"><h2>FX MODE · PUNCHES</h2><span class="eyebrow">Twelve effects on the keys</span></div>
+  <div class="steps" style="margin-bottom:22px">
+    <div class="step"><span class="n" style="color:var(--rust)">1</span><p>Tap <span class="k">FX</span>. It lights, and the keys switch effects instead of playing notes.</p></div>
+    <div class="step"><span class="n" style="color:var(--rust)">2</span><p><b>Hold</b> a key: the effect is on while you hold it.</p></div>
+    <div class="step"><span class="n" style="color:var(--rust)">3</span><p><b>Latch</b> it: hold it 2 s, or tap it twice. Press it again to let it go.</p></div>
+    <div class="step"><span class="n" style="color:var(--rust)">4</span><p>Tap <span class="k">FX</span> again for notes. Latched effects keep going.</p></div>
+  </div>
+  <div class="tblwrap"><div class="kbd" id="kbd" role="group" aria-label="Punch keys"></div></div>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card punchdetail" id="punchdetail" aria-live="polite"></div>
+    <div class="prose">
+      <h3 style="color:var(--rust)">HOLD AND TWIST</h3>
+      <p>While you hold an effect's key, the screen shows its name and <span class="k">K1</span>–<span class="k">K3</span> become its own controls. <span class="k">K4</span> is always <b>FADE</b>: how long it takes to come in and go out, 0 to 10 seconds.</p>
+      <p>Turning a knob while you hold a key stops the 2-second latch, so you can shape it without it sticking. Let go and you're back on your page. Punch settings are kept when you save.</p>
+      <p>Several can run at once, and they interact. BURN, VOID, SHATTER, WARBLE, DECIMATE, SCREAM and GATE also show in the picture.</p>
+      <p>In FX mode, <span class="k">ALGORITHM</span> turns through the effects chain's four pages: DIRT, FILTER, DELAY, REVERB.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="engines">
+  <div class="head"><h2>THE TWELVE ENGINES</h2><span class="eyebrow">ALGORITHM changes it · LAYER page K1–K3 · K4 is LEVEL</span></div>
+  <div class="tblwrap"><table class="big" id="enginetbl"><thead><tr><th>Engine</th><th>What it is</th><th>K1 · K2 · K3</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section class="wrap" id="scenes">
+  <div class="head"><h2>SCENES AND PLACES</h2><span class="eyebrow">Sixteen scenes · eight places</span></div>
+  <div class="scenes" id="scenegrid"></div>
+  <div class="grid2" style="margin-top:34px">
+    <div class="prose">
+      <h3>SCENES, SAVING AND SAFETY NETS</h3>
+      <div>
+        <div class="row"><span class="l">PRESETS</span><span>Turn through the scenes. While playing, a new scene glides in over MORPH (LFO › SCENE › K1, 0.1–20 s). Stopped, it loads and waits for PLAY.</span></div>
+        <div class="row"><span class="l">SEL + white key</span><span>Jump straight to scene 1–16 (white keys from the left).</span></div>
+        <div class="row"><span class="l">SAVE</span><span>Save into the current scene's slot. SAVE glows dimly while there are unsaved changes.</span></div>
+        <div class="row"><span class="l">SAVE + white key</span><span>Hold SAVE and tap a white key to save into that slot instead.</span></div>
+        <div class="row"><span class="l">SAVE twice</span><span>Rename the scene: K1 moves the cursor, K2 changes the letter (A–Z, 0–9, - . / # µ). SAVE keeps the name and saves; any other button cancels.</span></div>
+        <div class="row"><span class="l">SEL + PLAY</span><span>MUTATE: every layer's three engine controls nudged at random. SAVE keeps it; turning away and back drops it.</span></div>
+      </div>
+      <p class="note">A scene saves every layer (engine, chord, knobs, SHAPE, OUT), the effects chain, WEATHER, GLOBAL, its place and its name. Macros and FX mode are not saved. Punch settings and the keyboard octave are saved with any scene.</p>
+    </div>
+    <div class="prose">
+      <h3>EVERY PLACE IS ALIVE</h3>
+      <p>Any scene can show any place: <span class="k">LFO</span> twice for SCENE, then <span class="k">K2</span> PLACE, one place a click. Save to keep it.</p>
+      <div class="places" id="placegrid" style="grid-template-columns:repeat(2,minmax(0,1fr))"></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="commands">
+  <div class="head"><h2>ALL COMMANDS</h2><span class="eyebrow">Every gesture on one list</span></div>
+  <label class="eyebrow" for="q" style="display:block;margin-bottom:6px">Search</label>
+  <input class="search" id="q" type="search" placeholder="Try: macro, octave, save, latch" autocomplete="off">
+  <div class="tblwrap" style="margin-top:14px"><table class="big" id="cmdtbl"><thead><tr><th style="width:150px">Control</th><th style="width:190px">Gesture</th><th>What it does</th></tr></thead><tbody></tbody></table></div>
+  <p class="note" id="cmdcount" style="margin-top:8px"></p>
+</section>
+
+<section class="wrap" id="lights">
+  <div class="head"><h2>THE LIGHTS</h2><span class="eyebrow">What lit means</span></div>
+  <div class="grid2 lights">
+    <div>
+      <div class="row"><span class="l">Keys, bright</span><span>The selected layer's chord notes, any key you're holding, and in FX mode the punches that are on.</span></div>
+      <div class="row"><span class="l">Keys, dim</span><span>The other layers' chord notes. In FX mode, the twelve punch keys.</span></div>
+      <div class="row"><span class="l">Page button</span><span>The button whose page you're on: HOME, EDIT, GLO, FX, ENV or LFO.</span></div>
+    </div>
+    <div>
+      <div class="row"><span class="l">FX</span><span>FX mode is on: keys are effects.</span></div>
+      <div class="row"><span class="l">PLAY (green)</span><span>At least one layer is sounding.</span></div>
+      <div class="row"><span class="l">SEQ</span><span>The selected layer is in.</span></div>
+      <div class="row"><span class="l">ARP</span><span>FREEZE is on.</span></div>
+      <div class="row"><span class="l">REC</span><span>SMEAR's memory is recording.</span></div>
+      <div class="row"><span class="l">SAVE (dim)</span><span>The scene has unsaved changes.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="install">
+  <div class="head"><h2>INSTALL</h2><span class="eyebrow">Getting it onto your FM-1</span></div>
+  <div class="grid2">
+    <div class="prose">
+      <div class="row"><span class="l">1 · Connect</span><span>Plug the FM-1 into your computer over USB and switch it on.</span></div>
+      <div class="row"><span class="l">2 · Install</span><span>Open the <a href="../install/">web installer</a> in Chrome or Edge and follow it. It can put M-VAVE's own firmware back too.</span></div>
+      <div class="row"><span class="l">3 · Or by hand</span><span>Download the package from the <a href="https://github.com/monoeater/FM-1_Monodrone/releases">releases</a> and run <span class="tag">python3 fm1_install.py monodrone-X.Y.fwsc</span> (fm1-base's installer).</span></div>
+      <div class="row"><span class="l">4 · Play</span><span>The FM-1 restarts into MONODRONE on scene 1, ZONE. Press PLAY.</span></div>
+    </div>
+    <div class="prose">
+      <h3>BACK TO STOCK</h3>
+      <p>Hold <span class="k">OCT−</span> while you switch the FM-1 on, then install M-VAVE's own firmware (or any other) the same way.</p>
+      <h3>YOUR SCENES</h3>
+      <p>Saved scenes live on the FM-1 and survive updates: a newer MONODRONE reads an older one's scenes and moves them forward.</p>
+      <p class="note">MONODRONE is built on fm1-base and felucca-bsp. <a href="https://github.com/monoeater/FM-1_Monodrone">Source</a> licensed MPL-2.0. M-VAVE and FM-1 are trademarks of their owners; MONODRONE is not affiliated with M-VAVE.</p>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>MONODRONE · a drone instrument for the M-VAVE FM-1</span><span><a href="../">Home</a> · <a href="../emu/">Try it in the browser</a> · © 2026 Michael</span></div></footer>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const k=s=>s.replace(/\[([^\]]+)\]/g,'<span class="k">$1</span>');
+
+/* ---------- data ---------- */
+const PLACES=[
+ ['reactor','REACTOR','Cooling towers, the reactor block and its stack at night, a pylon and its wires.'],
+ ['peaks','PEAKS','A mountain range tapering away under drifting cumulus.'],
+ ['dunes','DUNES','A hall of sand mounds, a figure standing in it, a glowing door.'],
+ ['bunker','BUNKER','A dead train tunnel in perspective, rails, racks and junk, lamps flickering.'],
+ ['factory','FACTORY','A derelict hall with high lit windows.'],
+ ['control','CONTROL','A dead control room with a round tiled board, some tiles still blinking.'],
+ ['channel','CHANNEL','A dry concrete drainage channel under an expressway.'],
+ ['city','CITY','A fog-bound city: a vast black tower, sagging cables, mansard roofs, a balcony.']];
+const SCENES=[
+ ['ZONE','reactor','Howling chord, mains hum, Geiger, scraped metal'],
+ ['DRONEVIL','peaks','Doubled saw walls, heavy dirt and sub'],
+ ['LYRA','dunes','Cross-modulated sine chords, a low howl'],
+ ['DUST','bunker','Wind, fire crackle, static; crushed'],
+ ['CORTINI','peaks','Saw triad, choir, smeared grains; long reverb'],
+ ['RADIO','factory','Two shortwave sets, raw clicks, chaos'],
+ ['REACTOR','reactor','Hum chord, screaming howl, a Geiger storm'],
+ ['ASH','dunes','Smeared grains and a dark choir'],
+ ['INFECTUM','reactor','Low choir over a 25 Hz hum; vast'],
+ ['MEATGRND','factory','Saw fifths, chaos and metal, driven hard'],
+ ['REMOTE','channel','Static, wind, sparse tones; long echoes'],
+ ['SOYLENT','bunker','Two beating howls, choir; seasick'],
+ ['µSIEVERT','control','Dense Geiger over mains hum'],
+ ['ABYSS','dunes','Wind, grains, choir; wide and washed'],
+ ['FROST','peaks','Saws hard left, howl hard right'],
+ ['OMEGA','factory','Metal, hum and clicks in an industrial room']];
+const ENGINES=[
+ ['HIVE','tox','A pair of cross-modulating sines into a sharpening clip, with a sub','BEAT · CROSS · SHARP'],
+ ['SWARM','tox','Five detuned saws into a resonant low-pass: a wall','SPREAD · BRIGHT · GRIT'],
+ ['ROT','tox','Two-operator FM with feedback, mostly inharmonic ratios (K1 shows the ratio)','RATIO · INDEX · FEEDBK'],
+ ['WIND','rust','Noise through two resonant band-passes, one at the pitch, one a fifth up, with a brown rumble','FOCUS · SWEEP · RUMBLE'],
+ ['HOWL','rust','A tuned, saturated feedback loop; past about 70 % it screams by itself','FEEDBK · DAMP · EXCITE'],
+ ['GEIGER','rust','Random clicks, raw or ringing at pitch, and bursts of fire crackle','RATE · RING · FIRE'],
+ ['SMEAR','ice','Grains of the last 1.5 s of the other layers, at the chord\'s pitches. REC records or holds its memory','SIZE · SCATTER · DENSITY'],
+ ['HUM','ice','A transformer: mains buzz, a rattling lamination, sag and ripple','BUZZ · RATTLE · SAG'],
+ ['SCRAPE','ice','Bowed and scraped metal plates, friction and stick-slip','PRESS · METAL · GRIND'],
+ ['CHOIR','rose','A dead choir: three voices through dark vowels, with breath','VOWEL · BREATH · CROWD'],
+ ['STATIC','rose','Shortwave between stations: static, a drifting whistle, a fading signal','TUNE · SIGNAL · FADE'],
+ ['CHAOS','rose','The logistic map clocked at pitch, bending a sine; the clock fractures','CHAOS · BREAK · GRIT']];
+const MACROS=[
+ ['MACRO','ROT','Drive, crush, downsampling: all of the dirt in, darker.'],
+ ['MACRO','VAST','A bigger, wetter room and longer echoes. Endless at full.'],
+ ['MACRO','NAUSEA','Detune, unrest and drift; the weather faster and deeper.'],
+ ['MACRO','STARVE','A dying supply: layers sputter, pitches sag, bits and rate fall, the whole sound drops out.'],
+ ['MACRO 2','TANGLE','The layers modulate each other in a ring: each one\'s loudness moves the next one\'s K1, then ring modulation.'],
+ ['MACRO 2','RUNAWAY','Every feedback pushed toward screaming, and a loop that screams high: a fifth above the scene\'s lowest note, 1.4–2.8 kHz. It follows the scene.'],
+ ['MACRO 2','RUNOFF','The same feedback, screaming low: a fifth above the lowest note, 70–140 Hz.'],
+ ['MACRO 2','DELUGE','A hammered, bubbling sub under a steady wall of noise. Nothing wanders, nothing stops.']];
+const PUNCHES=[ /* name, key label, description, knobs, key index (0-26) */
+ ['BURN','F#','Crushed fuzz, held to the level going in','FUZZ · BITS',1],
+ ['VOID','G#','Pours into the reverb, then holds it forever as the dry falls away','SOAK · DRY · DARK',3],
+ ['SHATTER','A#','Glitch slices of the last moment, sometimes reversed','SIZE · REPEAT · REVERSE',5],
+ ['WARBLE','C#','A slow, soft pulse moving through the sound','RATE · DEPTH · WOW',8],
+ ['INFINITE','D#','A black hole: everything pulled down into an endless dark smear','FALL · DARK · DRAG',10],
+ ['SHIMMER DOWN','F#','The reverb an octave down, fed back in, cascading lower','MIX · FEED',13],
+ ['THROW','G#','The delay takes everything and runs near endless; let go and it rings off','FDBK · ECHO',15],
+ ['RING','A#','Ring modulation against a low, unsteady carrier','FREQ · WOBBLE · MIX',17],
+ ['DECIMATE','C#','Down to a few kilohertz and a few bits','RATE · BITS',20],
+ ['GATE','D#','A failing supply: chopped on and off at uneven lengths','SPEED · DEPTH',22],
+ ['SCREAM','F#','Locked feedback on a harmonic of the lowest note: a steady squeal','PITCH · FDBK · DRIVE',25],
+ ['ROTATE','F','The stereo field turns, unsteadily (the lowest white key)','SPEED · WOBBLE',0]];
+
+/* pages: button, page, img, knobs [name, what, range] */
+const PAGES=[
+ {btn:'HOME',color:'tox',note:'The selected layer\'s own pages, one per tap. Hold HOME and turn SELECT to step through them too. Turning SELECT to a new layer always starts on LAYER.',shots:['s_layer','s_shape'],pages:[
+   ['LAYER',[['K1–K3','The engine\'s own three controls (see Engines)',''],['LEVEL','The layer\'s level','0–100']]],
+   ['SHAPE',[['TUNE','Transpose the layer','±12 semitones'],['GLIDE','How long the voices slide to new notes','3 ms – 8 s'],['SWELL','How long it fades in and out (PLAY, SEQ)','20 ms – 41 s'],['DRIFT','Its own slow wander of pitch and K1','0–100']]],
+   ['OUT',[['LEVEL','The layer\'s level (the same as LAYER K4)','0–100'],['PAN','Where it sits','L100 – C – R100']]]]},
+ {btn:'EDIT',color:'tox',note:'Straight to the selected layer\'s SHAPE page.',shots:['s_shape'],pages:[
+   ['SHAPE',[['TUNE · GLIDE · SWELL · DRIFT','As on HOME › SHAPE','']]]]},
+ {btn:'GLO',color:'rose',note:'The four layers side by side. Tap again for PAN. Hold GLO and tap white keys 1–4 to bring layers in and out.',shots:['s_mix'],pages:[
+   ['MIX',[['LVL 1–4','Each layer\'s level','0–100']]],
+   ['PAN',[['PAN 1–4','Each layer\'s place in the stereo field','L100 – R100']]]]},
+ {btn:'ENV',color:'ice',note:'MACRO, then MACRO 2, then GLOBAL. Pressed from any other page it goes to MACRO. Hold ENV and turn a macro knob to snap it full or off; ENV + GLO turns every macro off.',shots:['s_macro2','s_global'],pages:[
+   ['MACRO',[['ROT · VAST · NAUSEA · STARVE','See The Macros','0–100']]],
+   ['MACRO 2',[['TANGLE · RUNAWAY · RUNOFF · DELUGE','See The Macros','0–100']]],
+   ['GLOBAL',[['DETUNE','Every voice rubbed apart','0–100'],['SUB','A low sine an octave under the lowest note','0–100'],['HISS','Tape hiss and hum: the floor','0–100'],['UNREST','Pitch and level unsteady, tape dropouts','0–100']]]]},
+ {btn:'LFO',color:'text',note:'WEATHER, a slow wind through everything. Tap again for SCENE.',shots:['s_weather','s_scene'],pages:[
+   ['WEATHER',[['SPEED','How fast the wind blows','0–100'],['TIMBRE','How far it moves each layer\'s K1','0–100'],['FILTER','How far it moves the filter','0–100'],['ROOM','How far it moves the delay and reverb','0–100']]],
+   ['SCENE',[['MORPH','How slowly a new scene glides in','0.1 – 20 s'],['PLACE','The picture, one place per click','8 places']]]]},
+ {btn:'FX',color:'rust',note:'Turns FX mode on: the keys become punches and ALGORITHM turns these four pages. FX again for notes.',shots:['s_dirt','s_punch'],pages:[
+   ['DIRT',[['DRIVE','Saturation','0–100'],['CRUSH','Bit reduction','0–100'],['RATE','Sample-rate reduction','0–100'],['MIX','Dry to dirty','0–100']]],
+   ['FILTER',[['CUTOFF','Where it cuts','0–100'],['RESO','Resonance','0–100'],['MODE','Low-pass through band-pass to high-pass','LOW · BAND · HIGH'],['SWEEP','How far its own slow wander moves the cutoff','0–100']]],
+   ['DELAY',[['TIME','The tape delay\'s time','20 ms – 1.5 s'],['FDBK','Repeats','0–100'],['TONE','Darker to brighter repeats','0–100'],['MIX','How much','0–100']]],
+   ['REVERB',[['SIZE','Decay time','0.4 – 31 s'],['DAMP','Darkens the tail','0–100'],['MOD','Movement in the tail','0–100'],['MIX','How much','0–100']]],
+   ['PUNCH (key held)',[['K1–K3','The held punch\'s own controls',''],['FADE','How long it comes in and goes out','0 – 10 s']]]]}];
+
+/* which page each knob does what on */
+const KNOBPAGES=[
+ ['LAYER','engine control 1','engine control 2','engine control 3','LEVEL'],['SHAPE','TUNE','GLIDE','SWELL','DRIFT'],['OUT','LEVEL','PAN','—','—'],
+ ['MIX','LVL 1','LVL 2','LVL 3','LVL 4'],['PAN','PAN 1','PAN 2','PAN 3','PAN 4'],
+ ['DIRT','DRIVE','CRUSH','RATE','MIX'],['FILTER','CUTOFF','RESO','MODE','SWEEP'],['DELAY','TIME','FDBK','TONE','MIX'],['REVERB','SIZE','DAMP','MOD','MIX'],
+ ['MACRO','ROT','VAST','NAUSEA','STARVE'],['MACRO 2','TANGLE','RUNAWAY','RUNOFF','DELUGE'],['GLOBAL','DETUNE','SUB','HISS','UNREST'],
+ ['WEATHER','SPEED','TIMBRE','FILTER','ROOM'],['SCENE','MORPH','PLACE','—','—'],['PUNCH','punch control 1','punch control 2','punch control 3','FADE']];
+
+const WNOTES=['F','G','A','B','C','D','E','F','G','A','B','C','D','E','F','G'];
+const MODS=[['','Nothing'],['FX','FX mode'],['SEL','SEL'],['SAVE','SAVE'],['GLO','GLO'],['ENV','ENV'],['HOME','HOME']];
+
+/* controls: id, name, short, screen image, actions [mod, gesture, text] */
+const C={};
+function add(id,name,what,img,acts,extra){C[id]={id,name,what,img,acts,extra}}
+add('MASTER','MASTER','Volume.','s_layer',[['','Turn','The output level.']]);
+add('SELECT','SELECT','Which layer you are playing and editing.','s_layer',[
+ ['','Turn','Selects layer 1–4. From SHAPE or OUT, a new layer starts on its LAYER page.'],
+ ['HOME','Turn (HOME held)','Steps through the selected layer\'s pages: LAYER, SHAPE, OUT.']]);
+add('PRESETS','PRESETS','The scene.','s_scene',[
+ ['','Turn','Scene 1–16. While playing, the new scene glides in over MORPH. Stopped, it loads and waits for PLAY. Unsaved changes to the old scene are dropped.']]);
+add('ALGORITHM','ALGORITHM','The selected layer\'s engine.','s_layer',[
+ ['','Turn','Changes the selected layer\'s engine through all twelve. While you hold a chord, it acts on that chord\'s layer.'],
+ ['FX','Turn (FX mode)','Steps the effects pages: DIRT, FILTER, DELAY, REVERB.']]);
+for(let i=0;i<4;i++){
+ const ex=[['','Turn','The page\'s control '+(i+1)+', named at the bottom of the screen. A fast turn moves further per click.'],
+  ['SEL','Turn (SEL held)','For now: let go of SEL and everything you turned springs back.'],
+  ['ENV','Turn (ENV held)','On MACRO or MACRO 2: clockwise snaps the macro to full, anticlockwise to off.'],
+  ['FX','Turn (punch key held)', i<3?'The held punch\'s control '+(i+1)+'. Turning stops the 2-second latch.':'FADE: how long the held punch takes to come in and go out, 0–10 s.']];
+ if(i===0) ex.push(['SAVE','Turn (renaming)','Moves the cursor along the name.']);
+ if(i===1) ex.push(['SAVE','Turn (renaming)','Changes the letter under the cursor.']);
+ if(i===1) ex.push(['','Turn (SCENE page)','PLACE: one place per click.']);
+ add('K'+(i+1),'KNOB '+(i+1),'Follows the page you are on.','s_layer',ex,{knob:i});
+}
+add('OCTDN','OCT−','The keyboard\'s octave, down.','s_layer',[
+ ['','Tap','The keys play an octave lower (six positions; starts on F1–G3).'],
+ ['SEL','Tap (SEL held)','The selected layer\'s chord moves down an octave, gliding there. It stays when you let go.'],
+ ['','Hold at power-on','Starts the FM-1\'s updater, to install other firmware.']]);
+add('OCTUP','OCT+','The keyboard\'s octave, up.','s_layer',[
+ ['','Tap','The keys play an octave higher.'],
+ ['SEL','Tap (SEL held)','The selected layer\'s chord moves up an octave, gliding there. It stays when you let go.']]);
+add('FX','FX','Effects: a mode for the keys.','s_dirt',[
+ ['','Tap','FX mode on (lit): the keys switch the punch effects, ALGORITHM turns the effects pages, and the screen shows DIRT, FILTER, DELAY or REVERB.'],
+ ['FX','Tap (in FX mode)','Back to notes. Latched punches keep going.']]);
+add('SEL','SEL','A modifier: hold it.','s_layer',[
+ ['SEL','Hold + turn knobs','Try anything: let go and every knob springs back.'],
+ ['SEL','Hold + white key','Recall scene 1–16.'],
+ ['SEL','Hold + PLAY','MUTATE: every layer\'s three engine controls nudged at random.'],
+ ['SEL','Hold + OCT− / OCT+','The selected layer\'s chord an octave down or up.']]);
+add('ENV','ENV','Macros and GLOBAL.','s_macro',[
+ ['','Tap','MACRO; again MACRO 2; again GLOBAL. From any other page, MACRO.'],
+ ['ENV','Hold + turn a macro knob','Clockwise: full. Anticlockwise: off.'],
+ ['ENV','Hold + GLO','Every macro off.']]);
+add('LFO','LFO','Weather and scene.','s_weather',[
+ ['','Tap','WEATHER; again SCENE (MORPH and PLACE).']]);
+add('EDIT','EDIT','The layer\'s shape.','s_shape',[
+ ['','Tap','The selected layer\'s SHAPE page: TUNE, GLIDE, SWELL, DRIFT.']]);
+add('GLO','GLO','All four layers.','s_mix',[
+ ['','Tap','MIX (the four levels); again PAN (the four pans).'],
+ ['GLO','Hold + white keys 1–4','Bring layer 1–4 in or out.'],
+ ['ENV','Tap (ENV held)','Every macro off.']]);
+add('HOME','HOME','The layer\'s pages.','s_layer',[
+ ['','Tap','LAYER, then SHAPE, then OUT, then LAYER again.'],
+ ['HOME','Hold + turn SELECT','Steps through LAYER, SHAPE, OUT.']]);
+add('SAVE','SAVE','Keep a scene.','s_rename',[
+ ['','Tap','Saves the scene into its own slot. SAVE glows dimly while there are unsaved changes.'],
+ ['','Tap twice','Rename the scene: K1 moves the cursor, K2 changes the letter. SAVE keeps the name and saves; any other button cancels.'],
+ ['SAVE','Hold + white key','Save into slot 1–16 instead.']]);
+add('ARP','ARP','FREEZE.','s_layer',[
+ ['','Tap','FREEZE on or off (lit): the reverb and delay hold what they have, forever.']]);
+add('SEQ','SEQ','The selected layer in or out.','s_layer',[
+ ['','Tap','Brings the selected layer in or out over its SWELL (lit when in). New notes never bring a layer back in.']]);
+add('PLAY','PLAY / STOP','The whole scene in or out.','s_layer',[
+ ['','Tap','Brings the scene\'s layers in, or fades them all out and remembers which were in. Green while anything sounds.'],
+ ['SEL','Tap (SEL held)','MUTATE the scene.']]);
+add('REC','REC','SMEAR\'s memory.','s_layer',[
+ ['','Tap','SMEAR\'s memory records (lit) or holds what it has. Only matters on a layer running SMEAR.']]);
+for(let i=0;i<16;i++){
+ const a=[['','Play','Note '+WNOTES[i]+'. Hold several keys for a chord; let go and it stays. Press harder to swell it.'],
+  ['SEL','Tap (SEL held)','Recall scene '+(i+1)+' · '+SCENES[i][0]+'.'],
+  ['SAVE','Tap (SAVE held)','Save into slot '+(i+1)+'.']];
+ if(i<4) a.push(['GLO','Tap (GLO held)','Layer '+(i+1)+' in or out.']);
+ if(i===0) a.push(['FX','Hold (FX mode)','ROTATE punch: the stereo field turns, unsteadily. Hold 2 s or tap twice to latch.']);
+ add('W'+i,'WHITE KEY '+(i+1),i===0?'Note F · ROTATE in FX mode.':'Note '+WNOTES[i]+'.', i===0?'s_punch':'s_layer',a);
+}
+const BKX=[209,322,435,661,774,1000,1113,1226,1452,1565,1791];
+for(let j=0;j<11;j++){
+ const p=PUNCHES[j];
+ add('B'+j,'BLACK KEY · '+p[1],'Note '+p[1]+' · '+p[0]+' in FX mode.','s_punch',[
+  ['','Play','Note '+p[1]+', as part of a chord.'],
+  ['FX','Hold (FX mode)',p[0]+': '+p[2]+'. Hold 2 s or tap twice to latch; press again to let go.'],
+  ['FX','Turn K1–K4 while holding',p[3]+' · FADE']]);
+}
+
+/* ---------- hero ---------- */
+const hero=$('#heroAnim'), lbl=$('#heroLbl'), bar=$('#placebar');
+let pi=0, timer=null;
+function showPlace(i){pi=i; hero.style.backgroundImage='url(img/anim_'+PLACES[i][0]+'.png)'; lbl.textContent=PLACES[i][1];
+ bar.querySelectorAll('button').forEach((b,j)=>b.setAttribute('aria-pressed',j===i))}
+PLACES.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.textContent=p[1];b.onclick=()=>{showPlace(i);clearInterval(timer)};bar.appendChild(b)});
+showPlace(0);
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches) timer=setInterval(()=>showPlace((pi+1)%PLACES.length),7000);
+
+/* ---------- panel svg ---------- */
+const NS='http://www.w3.org/2000/svg', svg=$('#panel');
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const x in a)e.setAttribute(x,a[x]);(p||svg).appendChild(e);return e}
+function txt(x,y,s,a,p){const t=el('text',Object.assign({x,y,'text-anchor':'middle','font-family':"'Barlow Semi Condensed',sans-serif",'font-weight':700,'font-size':34,'letter-spacing':2,fill:'#d6d2ba'},a||{}),p);t.textContent=s;return t}
+el('rect',{x:8,y:8,width:1984,height:1264,rx:60,fill:'#1e201a',stroke:'#0a0b09','stroke-width':4});
+el('rect',{x:1136,y:320,width:800,height:280,rx:30,fill:'#171913'});
+el('rect',{x:116,y:516,width:420,height:116,rx:24,fill:'#171913'});
+el('rect',{x:72,y:680,width:1856,height:540,rx:40,fill:'#121410'});
+const G={};
+function ctl(id,draw){const g=el('g',{class:'ctl',tabindex:0,role:'button','aria-label':C[id].name,'data-id':id});draw(g);G[id]=g;
+ g.addEventListener('click',()=>select(id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(id)}});return g}
+function knob(id,cx,cy,label){ctl(id,g=>{txt(cx,cy-82,label,{'font-size':36},g);el('circle',{cx,cy,r:56,fill:'#121410'},g);el('circle',{class:'face',cx,cy,r:44,fill:'#0a0b09',stroke:'#3c4034','stroke-width':4},g);el('rect',{x:cx-4,y:cy-38,width:8,height:24,rx:4,fill:'#d6d2ba'},g)})}
+knob('MASTER',210,200,'MASTER');knob('SELECT',430,200,'SELECT');knob('PRESETS',210,410,'PRESETS');knob('ALGORITHM',430,410,'ALGORITHM');
+[1220,1428,1636,1844].forEach((x,i)=>knob('K'+(i+1),x,200,'KNOB'+(i+1)));
+el('rect',{x:600,y:88,width:472,height:472,rx:26,fill:'#0f100d'});
+const scr=el('image',{x:612,y:100,width:448,height:448,href:'img/s_layer.png',style:'image-rendering:pixelated'});
+function btn(id,x,y,label,small){ctl(id,g=>{el('rect',{class:'face',x,y,width:110,height:96,rx:14,fill:'#24271f',stroke:'#4a4f40','stroke-width':3},g);
+ if(small){txt(x+55,y+44,'PLAY',{'font-size':26},g);txt(x+55,y+72,'STOP',{'font-size':26},g)} else txt(x+55,y+60,label,{'font-size':label.length>3?30:34},g)})}
+['FX','SEL','ENV','LFO','EDIT','GLO'].forEach((b,i)=>btn(b,1163+126*i,348,b));
+['HOME','SAVE','ARP','SEQ','PLAY','REC'].forEach((b,i)=>btn(b,1163+126*i,472,b,b==='PLAY'));
+ctl('OCTDN',g=>{el('rect',{class:'face',x:143,y:536,width:166,height:76,rx:14,fill:'#24271f',stroke:'#4a4f40','stroke-width':3},g);txt(226,586,'OCT−',{},g)});
+ctl('OCTUP',g=>{el('rect',{class:'face',x:339,y:536,width:166,height:76,rx:14,fill:'#24271f',stroke:'#4a4f40','stroke-width':3},g);txt(422,586,'OCT+',{},g)});
+const KL={};
+for(let i=0;i<16;i++){const x=108+113*i;ctl('W'+i,g=>{el('rect',{class:'face',x,y:912,width:88,height:280,rx:44,fill:'#d6d2ba',stroke:'#d6d2ba','stroke-width':3},g);
+ KL['W'+i]=txt(x+44,1160,'',{fill:'#3a3d32','font-size':30},g)})}
+for(let j=0;j<11;j++){const cx=BKX[j];ctl('B'+j,g=>{el('rect',{class:'face',x:cx-44,y:712,width:88,height:178,rx:44,fill:'#9a9a86',stroke:'#9a9a86','stroke-width':3},g);
+ KL['B'+j]=txt(cx,801,'',{fill:'#0a0b09','font-size':24,transform:'rotate(-90 '+cx+' 801)','letter-spacing':1},g)})}
+
+/* ---------- modifier view ---------- */
+let mod='', cur='ENV';
+const modsEl=$('#mods');
+MODS.forEach(([m,l])=>{const b=document.createElement('button');b.type='button';b.textContent=l;if(m==='FX')b.className='fxm';b.dataset.m=m;b.onclick=()=>setMod(m);modsEl.appendChild(b)});
+function setMod(m){mod=m;modsEl.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));
+ for(const id in G){const c=C[id];const uses=c.acts.some(a=>a[0]===m);const self=(m&&id===m);
+  G[id].classList.toggle('off',!!m&&!uses&&!self);G[id].classList.toggle('on',self)}
+ for(let i=0;i<16;i++){let s=WNOTES[i];if(m==='SEL'||m==='SAVE')s=String(i+1);else if(m==='GLO')s=i<4?'L'+(i+1):'';else if(m==='FX')s=i===0?'ROT':'';else if(m)s='';KL['W'+i].textContent=s}
+ for(let j=0;j<11;j++){KL['B'+j].textContent=m==='FX'?PUNCHES[j][0].replace('SHIMMER DOWN','SHIMMER'):''}
+ render(cur)}
+function select(id){cur=id;for(const g in G)G[g].classList.toggle('sel',g===id);render(id)}
+function render(id){
+ const c=C[id];let img=c.img;
+ if(mod==='FX'&&(id==='ALGORITHM'||/^K/.test(id)))img='s_dirt';
+ if(mod==='FX'&&/^B|^W0$/.test(id))img='s_punch';
+ if(mod==='ENV'&&/^K/.test(id))img='s_macro';
+ if(mod==='SAVE'&&/^K[12]$/.test(id))img='s_rename';
+ scr.setAttribute('href','img/'+img+'.png');
+ const acts=c.acts.slice().sort((a,b)=>(b[0]===mod&&mod?1:0)-(a[0]===mod&&mod?1:0));
+ let h='<div class="eyebrow">Control</div><div class="name">'+esc(c.name)+'</div><div class="what">'+esc(c.what)+'</div><div class="acts">';
+ acts.forEach(a=>{h+='<div class="act'+(mod&&a[0]===mod?' hi':'')+'"><span class="g">'+esc(a[1]).replace(/\((.*)\)/,'<b>$1</b>')+'</span><span>'+esc(a[2])+'</span></div>'});
+ h+='</div>';
+ if(c.extra&&c.extra.knob!=null){h+='<div class="eyebrow" style="margin-top:4px">On each page</div><table class="minitbl">';KNOBPAGES.forEach(r=>{h+='<tr><td>'+r[0]+'</td><td>'+esc(r[c.extra.knob+1])+'</td></tr>'});h+='</table>'}
+ $('#detail').innerHTML=h}
+setMod('');select('ENV');
+
+/* ---------- pages ---------- */
+const COL={tox:'var(--tox)',rust:'var(--rust)',ice:'var(--ice)',rose:'var(--rose)',text:'var(--text)'};
+$('#pagecards').innerHTML=PAGES.map(b=>{
+ let h='<div class="card pagecard"><div class="shots">'+b.shots.map(s=>'<img class="shot pix" src="img/'+s+'.png" alt="" width="240" height="240" loading="lazy">').join('')+'</div><div style="min-width:0;display:flex;flex-direction:column;gap:8px">';
+ h+='<div style="display:flex;gap:10px;align-items:center"><span class="btnchip" style="border-color:'+COL[b.color]+'">'+b.btn+'</span></div><p style="font-size:14.5px;color:var(--dim)">'+esc(b.note)+'</p>';
+ b.pages.forEach(p=>{h+='<div class="pg"><div class="pn" style="color:'+COL[b.color]+'">'+esc(p[0])+'</div><table class="kt">'+p[1].map(r=>'<tr><td class="kn">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="kr">'+esc(r[2])+'</td></tr>').join('')+'</table></div>'});
+ return h+'</div></div>'}).join('');
+
+/* ---------- macros ---------- */
+let mh='',last='';MACROS.forEach(m=>{if(m[0]!==last){mh+='<h3 style="margin:14px 0 4px">'+m[0]+'</h3>';last=m[0]}mh+='<div class="row"><span class="l">'+m[1]+'</span><span>'+esc(m[2])+'</span></div>'});
+$('#macrolist').innerHTML=mh;
+
+/* ---------- punch keyboard ---------- */
+const kb=$('#kbd');let pk=10;
+const WX=i=>i*48;
+for(let i=0;i<16;i++){const b=document.createElement('button');b.type='button';b.className='w'+(i===0?' rot':'');b.style.left=WX(i)+'px';
+ b.innerHTML=i===0?'<span class="v">ROTATE</span>':'';if(i===0){b.onclick=()=>showPunch(11)}else{b.tabIndex=-1;b.style.cursor='default';b.setAttribute('aria-hidden','true')}kb.appendChild(b)}
+const BIDX=[0,1,2,4,5,7,8,9,11,12,14];
+for(let j=0;j<11;j++){const b=document.createElement('button');b.type='button';b.className='b';b.style.left=(WX(BIDX[j])+31)+'px';b.innerHTML='<span>'+PUNCHES[j][0]+'</span>';b.onclick=()=>showPunch(j);kb.appendChild(b)}
+function showPunch(j){pk=j;const p=PUNCHES[j];
+ kb.querySelectorAll('.b').forEach((b,i)=>b.setAttribute('aria-pressed',i===j));kb.querySelector('.w').setAttribute('aria-pressed',j===11);
+ $('#punchdetail').innerHTML='<div class="eyebrow">'+(j===11?'Lowest white key':'Black key')+' · '+p[1]+'</div><div class="detail" style="position:static"><div class="name" style="color:var(--rust)">'+p[0]+'</div></div><p>'+esc(p[2])+'.</p><table class="kt"><tr><td class="kn">K1–K3</td><td>'+esc(p[3])+'</td></tr><tr><td class="kn">K4</td><td>FADE · 0–10 s</td></tr></table>'}
+showPunch(10);
+
+/* ---------- engines ---------- */
+$('#enginetbl tbody').innerHTML=ENGINES.map(e=>'<tr><td class="en" style="color:'+COL[e[1]]+'">'+e[0]+'</td><td>'+esc(e[2])+'</td><td class="mono">'+e[3]+'</td></tr>').join('');
+
+/* ---------- scenes & places ---------- */
+$('#scenegrid').innerHTML=SCENES.map((s,i)=>'<div class="scene"><img class="pix" src="img/place_'+s[1]+'.png" alt="'+s[1]+'" width="240" height="88" loading="lazy"><div class="sn"><span class="num">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(s[0])+'</span></div><div class="ds">'+esc(s[2])+'</div><div class="pl">'+s[1].toUpperCase()+' · WHITE KEY '+(i+1)+'</div></div>').join('');
+$('#placegrid').innerHTML=PLACES.map(p=>'<div class="place"><div class="anim pix" style="background-image:url(img/anim_'+p[0]+'.png)" role="img" aria-label="'+p[1]+'"></div><div class="t">'+p[1]+'</div><div class="d">'+esc(p[2])+'</div></div>').join('');
+
+/* ---------- all commands ---------- */
+const rows=[];const seen=new Set();
+const order=['MASTER','SELECT','PRESETS','ALGORITHM','K1','K2','K3','K4','OCTDN','OCTUP','FX','SEL','ENV','LFO','EDIT','GLO','HOME','SAVE','ARP','SEQ','PLAY','REC'];
+order.forEach(id=>C[id].acts.forEach(a=>{let name=C[id].name;
+ if(/^K\d/.test(id)){const key=a[1]+a[2].replace(/\d/,'#');if(seen.has(key))return;seen.add(key);name='K1–K4';if(/cursor/.test(a[2]))name='K1';if(/letter|PLACE/.test(a[2]))name='K2';a=[a[0],a[1],a[2].replace(/control \d/,'control').replace(/^FADE/,'K4 is FADE')]}
+ rows.push([name,a[1],a[2]])}));
+rows.push(['White keys','Play','Notes. Keys held together build a chord of up to four; let go and it stays latched. Press harder to swell it.']);
+rows.push(['White keys','Tap (SEL held)','Recall scene 1–16.']);
+rows.push(['White keys','Tap (SAVE held)','Save into slot 1–16.']);
+rows.push(['White keys 1–4','Tap (GLO held)','Layer 1–4 in or out.']);
+rows.push(['Black keys','Play','Notes, as part of a chord.']);
+PUNCHES.forEach(p=>rows.push([p[4]===0?'Lowest white key':'Black key '+p[1],'Hold (FX mode)',p[0]+': '+p[2]+'. Knobs: '+p[3]+' · FADE.']));
+rows.push(['Punch key','Hold 2 s or tap twice (FX mode)','Latch the punch; press again to let it go.']);
+rows.push(['MIDI','Notes · CC · aftertouch','Notes build chords; CC1 K1, CC7 level, CC74 cutoff, CC71 resonance, CC91 reverb, CC93 delay; aftertouch is pressure.']);
+const tb=$('#cmdtbl tbody');
+function drawCmds(q){q=(q||'').toLowerCase().trim();let n=0;
+ tb.innerHTML=rows.filter(r=>!q||r.join(' ').toLowerCase().includes(q)).map(r=>{n++;return '<tr><td class="en" style="font-size:15px;color:var(--text)">'+esc(r[0])+'</td><td class="mono">'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'}).join('');
+ $('#cmdcount').textContent=n+' of '+rows.length+' commands'}
+$('#q').addEventListener('input',e=>drawCmds(e.target.value));drawCmds('');
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+# the eight factory scenes, 10 s each
+wait 1200
+wav scenes.wav
+tap PLAY
+wait 10000
+shot sc1.png
+turn PRESET 1
+wait 10000
+shot sc2.png
+turn PRESET 1
+wait 10000
+shot sc3.png
+turn PRESET 1
+wait 10000
+shot sc4.png
+turn PRESET 1
+wait 10000
+shot sc5.png
+turn PRESET 1
+wait 10000
+shot sc6.png
+turn PRESET 1
+wait 10000
+shot sc7.png
+turn PRESET 1
+wait 10000
+shot sc8.png
+tap PLAY
+wait 5000
+wavstop

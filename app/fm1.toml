@@ -1,0 +1,24 @@
+# MONODRONE's build settings (fm1-base's tools/build.py: ./build.sh)
+name = "monodrone"             # the build's files: monodrone.fwsc
+id_prefix = "FM-1_77"          # package identity: dev FM-1_7700, releases FM-1_77XXYYZZ (0.0.1: FM-1_77000001)
+usb_manufacturer = "MONODRONE"
+usb_product = "MONODRONE FM-1"
+ble = false                    # no radio: the RAM and the pool go to the drones
+usb_audio_in = true            # the output recordable over USB
+usb_audio_out = false
+cpu2 = true                    # the second core renders layers 3 and 4 (drone_dsp.c layers_run)
+cpu2_fallback = true           # a failure of it: one core until power-off, not a restart
+o2 = ["drone_dsp.c"]           # the sound at -O2, apart from the unity build
+words = "words.tsv"
+font_sub = ["94=181"]          # the font draws ^ as the micro sign (scene 13, ^SIEVERT)
+# the site
+tagline = "drones for the end of the world"
+repo = "https://github.com/monoeater/FM-1_Monodrone"
+install = "https://monoeater.github.io/FM-1_Monodrone/install/"
+site = "https://monoeater.github.io/FM-1_Monodrone/"
+licence = "MPL-2.0"
+author = "Michael"
+description = "Four layers of drone, each a latched chord of up to four voices on one of twelve engines, into one chain of dirt, filter, tape delay and reverb. No sequencer: you set things running, bend them live and move between sixteen scenes, each with its own animated 1-bit place. Twelve punch effects on the keys, eight macros that move many settings at once, MIDI in over USB and TRS, and the output recordable over USB."
+tags = ["ambient", "synth", "experimental"]
+screenshot = "docs/img/screen.png"
+credits = "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments). Fonts: Barlow (SIL OFL 1.1)."

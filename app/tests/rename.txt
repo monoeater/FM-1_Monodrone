@@ -1,0 +1,12 @@
+# scenes saved with the old names take the new ones (INFECTUM SOYLENT ABYSS FROST OMEGA); others untouched
+wait 500
+expect mkoldnames 1
+expect scname8 87
+reboot
+wait 500
+expect scname8 73
+expect scname11 83
+expect scname13 65
+expect scname14 70
+expect scname15 79
+expect scname2 81

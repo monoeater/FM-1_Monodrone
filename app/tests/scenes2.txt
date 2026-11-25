@@ -1,0 +1,33 @@
+# scenes 9-16, 12 s each
+wait 1200
+turn PRESET 8
+wait 2000
+expect scene 8
+wav scenes2.wav
+tap PLAY
+wait 12000
+shot sc9.png
+turn PRESET 1
+wait 12000
+shot sc10.png
+turn PRESET 1
+wait 12000
+shot sc11.png
+turn PRESET 1
+wait 12000
+shot sc12.png
+turn PRESET 1
+wait 12000
+shot sc13.png
+turn PRESET 1
+wait 12000
+shot sc14.png
+turn PRESET 1
+wait 12000
+shot sc15.png
+turn PRESET 1
+wait 12000
+shot sc16.png
+tap PLAY
+wait 4000
+wavstop

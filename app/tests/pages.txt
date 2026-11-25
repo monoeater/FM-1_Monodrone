@@ -1,0 +1,44 @@
+wait 1200
+tap PLAY
+wait 2000
+tap EDIT
+wait 1500
+shot p_shape.png
+tap GLO
+wait 1500
+shot p_mix.png
+tap GLO
+wait 1500
+shot p_pan.png
+tap FX
+wait 1500
+shot p_dirt.png
+turn ALGO 1
+wait 1500
+shot p_filter.png
+turn ALGO 1
+wait 1500
+shot p_delay.png
+turn ALGO 1
+wait 1500
+shot p_reverb.png
+tap FX
+tap LFO
+wait 1500
+shot p_weather.png
+tap LFO
+wait 1500
+shot p_scene.png
+tap FX
+key b0 down
+wait 300
+shot p_burn.png
+key b0 up
+key b1 down
+wait 800
+shot p_void.png
+key b1 up
+tap FX
+tap ARP
+wait 600
+shot p_freeze.png

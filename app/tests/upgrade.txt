@@ -1,0 +1,19 @@
+# a store from L12 (9..16 copies of 1..8; 14 saved over): 9..16 become their own scenes, 14 keeps its sound, new name
+wait 500
+expect mkold 1
+expect sceng12 1
+reboot
+wait 500
+expect sceng12 5
+expect scname12 94
+expect sceng8 9
+expect scname8 73
+expect scname13 65
+expect scfx13 31
+expect sceng13 10
+expect scland0 8
+expect scland1 56
+expect scland5 72
+expect scland12 88
+expect scland13 72
+expect scland10 104

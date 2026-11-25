@@ -1,0 +1,14 @@
+# GLIDE starts at 3 ms (0); an L28 store's untouched 30s become 0, a GLIDE someone set stays
+wait 1000
+expect glide0 0
+expect glide3 0
+expect mkv10 1
+reboot
+wait 1000
+expect glide0 0
+expect glide2 0
+turn PRESET 1
+wait 300
+expect scene 1
+expect glide0 90
+expect glide1 0

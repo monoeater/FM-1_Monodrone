@@ -1,0 +1,34 @@
+# SAVE twice: rename. K1 the cursor, K2 the letter; SAVE keeps it; another button lets it go
+wait 1000
+tap SAVE
+wait 100
+tap SAVE
+wait 100
+expect rn 1
+turn K2 1
+expect curname0 90
+tap SAVE
+wait 200
+expect rn 0
+expect curname0 48
+expect curname1 79
+tap SAVE
+wait 100
+tap SAVE
+wait 100
+expect rn 1
+turn K1 1
+turn K2 -1
+wait 600
+shot rename.png
+tap HOME
+wait 100
+expect rn 0
+expect curname1 79
+tap SAVE
+wait 100
+tap SAVE
+turn K2 -5
+tap SAVE
+wait 200
+expect curname0 86

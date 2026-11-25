@@ -1,0 +1,19 @@
+# SEL + OCT-/OCT+: the selected layer's chord moves an octave; the keyboard octave doesn't; it stays when SEL goes
+wait 1000
+expect note0 29
+press SEL
+tap OCT+
+release SEL
+wait 100
+expect note0 41
+press SEL
+tap OCT-
+tap OCT-
+release SEL
+wait 100
+expect note0 17
+key w1 down 100 40
+wait 50
+key w1 up
+wait 100
+expect note0 31
