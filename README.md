@@ -1,9 +1,6 @@
 # MONODRONE
 
-A drone instrument for the M-VAVE FM-1. Four layers of held chords on twelve engines (howls, dead choirs, Geiger
-clicks, shortwave static, transformer hum, chaos) run into dirt, filter, tape delay and reverb. No sequencer: set
-things running, bend them live, move between sixteen scenes, each with its own animated 1-bit place. Twelve punch
-effects on the keys, eight macros.
+A drone instrument for the M-VAVE FM-1. Four layers of held chords from one of twelve engines run into dirt, filter, tape delay and reverb. There is no sequencer. Set things running, bend them live, move between sixteen scenes, each with its own animated 1-bit place. Twelve punch effects on the keys, eight macros.
 
 ![MONODRONE on the FM-1's screen](docs/img/screen.png)
 
