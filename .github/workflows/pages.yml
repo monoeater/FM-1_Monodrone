@@ -82,6 +82,10 @@ jobs:
           open("build/site/index.html", "w").write(page)
           PY
           fi
+          if [ ! -f "$out/install/index.html" ]; then   # no release yet: say so, rather than a missing page
+            mkdir -p "$out/install"
+            printf '%s\n' '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Install MONODRONE</title><style>body{background:#0a0b09;color:#d6d2ba;font:17px/1.55 system-ui,sans-serif;max-width:640px;margin:0 auto;padding:48px 16px}h1{color:#aae628;letter-spacing:.04em}a{color:#aae628}</style></head><body><h1>INSTALL MONODRONE</h1><p>The web installer appears here with the first release. Until then, see the <a href="https://github.com/monoeater/FM-1_Monodrone/releases">releases</a>, the <a href="../manual/">manual</a> or <a href="../emu/">try it in the browser</a>.</p></body></html>' > "$out/install/index.html"
+          fi
           mkdir -p "$out/img"
           cp app/site/img/* "$out/img/"
           rm -rf "$out/manual" && cp -r docs/manual "$out/manual"
