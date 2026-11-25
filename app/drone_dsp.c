@@ -1082,14 +1082,14 @@ void dr_render(float *lr, uint32_t n)
     ring_f += (ring_t - ring_f) * clampf(bt * 6.0f, 0.0f, 1.0f);
     float ring_inc = ring_f * ISR, rot_rate = ro_rate * (0.8f + ro_wob * (0.5f + 0.5f * wander(&pw[2], 0.3f, bt, &rng_state)));
     float wbw = wander(&pw[0], 0.15f, bt, &rng_state);
-    /* RUNAWAY's and RUNOFF's loops (block rate): RUNAWAY tuned a fifth above the highest note, RUNOFF a fifth above the
-     * lowest (each note's 3rd harmonic), raised or lowered by octaves into its range (RUNAWAY 1.4..2.8 kHz, RUNOFF
+    /* RUNAWAY's and RUNOFF's loops (block rate): RUNAWAY tuned a fifth above the highest note (its 3rd harmonic), RUNOFF a
+     * fifth below the lowest (2/3 of it), raised or lowered by octaves into its range (RUNAWAY 1.4..2.8 kHz, RUNOFF
      * 70..140 Hz); they follow the scene, gliding when that note changes, and nothing else moves them; each line a whole number of its pitch's periods, so
      * the comb and the band agree on it. In as the knob's square */
     float g_lp[2];
     svfc_t lpc[2];
     for (uint32_t q = 0; q < 2u; q++) {
-        float g = u7(E.macro[q ? MC_RUNOFF : MC_RUNAWAY]), lo = q ? 70.0f : 1400.0f, f5 = (q ? scr_base : scr_top) * 3.0f;
+        float g = u7(E.macro[q ? MC_RUNOFF : MC_RUNAWAY]), lo = q ? 70.0f : 1400.0f, f5 = q ? scr_base * (2.0f / 3.0f) : scr_top * 3.0f;
         g_lp[q] = g * g * 0.85f;
         while (f5 < lo) f5 *= 2.0f;
         while (f5 > lo * 2.0f) f5 *= 0.5f;
