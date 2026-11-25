@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: MPL-2.0
+# Tag a release from main (Actions > Tag a release > Run workflow), then build it: the release workflow runs on the
+# new tag, as it would after a pushed tag.
+name: Tag a release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, as X.Y or X.Y.Z (1.0 tags v1.0)"
+        required: true
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag and start the release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]{1,2}\.[0-9]{1,2}(\.[0-9]{1,2})?(-[A-Za-z0-9]+)?$ ]] || { echo "bad version: $VERSION"; exit 1; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "MONODRONE $VERSION"
+          git push origin "v$VERSION"
+          gh workflow run release.yml --ref "v$VERSION"
