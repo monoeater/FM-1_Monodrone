@@ -639,7 +639,7 @@ static uint32_t xb_i;
 static float x_rms[DR_LAYERS], x_avg[DR_LAYERS];
 static float j_tangle;
 static float sub_lp2 = -3.0f, sub_ph, sub_g, hiss_lp, hiss_ph[3], hiss_crk;
-static float burn_ein, burn_eout, burn_g = 1.0f, void_lp[2], scr_fb[2], scr_base = 110.0f;
+static float burn_ein, burn_eout, burn_g = 1.0f, void_lp[2], scr_fb[2], scr_base = 110.0f, scr_top = 220.0f;
 static float void_t, void_ref, void_wg = 1.0f, bus_env, wet_env, inf_depth, wb_lp[2], wb_pp;
 static float drop_g = 1.0f, flut_ph;
 static uint32_t drop_n;
@@ -910,13 +910,14 @@ void dr_render(float *lr, uint32_t n)
     /* ---- GLOBAL: the SUB under the lowest note sounding, the HISS under everything ---- */
     {
         float sub = u7(E.glob[GL_SUB]), hiss = u7(E.glob[GL_HISS]), lf = 0.0f;
-        int low = 200;
+        int low = 200, high = -1;
         for (li = 0; li < DR_LAYERS; li++) {
             const dr_layer_t *c = &E.L[li];
             if (L[li].fade > lf) lf = L[li].fade;
             if (!c->on) continue;
-            for (uint32_t k = 0; k < c->nv && k < DR_VOICES; k++) if (c->note[k] < low) low = c->note[k];
+            for (uint32_t k = 0; k < c->nv && k < DR_VOICES; k++) { if (c->note[k] < low) low = c->note[k]; if (c->note[k] > high) high = c->note[k]; }
         }
+        if (high >= 0) scr_top = 440.0f * fm_exp2f(((float)high - 69.0f) * (1.0f / 12.0f));
         if (low < 200) scr_base = 440.0f * fm_exp2f(((float)low - 69.0f) * (1.0f / 12.0f));
         if (low < 200) {                                         /* an octave down; two if that is still above 90 Hz */
             float t = ((float)low - 69.0f - 12.0f) * (1.0f / 12.0f);
@@ -1081,14 +1082,14 @@ void dr_render(float *lr, uint32_t n)
     ring_f += (ring_t - ring_f) * clampf(bt * 6.0f, 0.0f, 1.0f);
     float ring_inc = ring_f * ISR, rot_rate = ro_rate * (0.8f + ro_wob * (0.5f + 0.5f * wander(&pw[2], 0.3f, bt, &rng_state)));
     float wbw = wander(&pw[0], 0.15f, bt, &rng_state);
-    /* RUNAWAY's and RUNOFF's loops (block rate): each tuned a fifth above the lowest note (its 3rd harmonic), raised or
-     * lowered by octaves into its range (RUNAWAY 1.4..2.8 kHz, RUNOFF 70..140 Hz); they follow the scene, gliding
-     * when the lowest note changes, and nothing else moves them; each line a whole number of its pitch's periods, so
+    /* RUNAWAY's and RUNOFF's loops (block rate): RUNAWAY tuned a fifth above the highest note, RUNOFF a fifth above the
+     * lowest (each note's 3rd harmonic), raised or lowered by octaves into its range (RUNAWAY 1.4..2.8 kHz, RUNOFF
+     * 70..140 Hz); they follow the scene, gliding when that note changes, and nothing else moves them; each line a whole number of its pitch's periods, so
      * the comb and the band agree on it. In as the knob's square */
     float g_lp[2];
     svfc_t lpc[2];
     for (uint32_t q = 0; q < 2u; q++) {
-        float g = u7(E.macro[q ? MC_RUNOFF : MC_RUNAWAY]), lo = q ? 70.0f : 1400.0f, f5 = scr_base * 3.0f;
+        float g = u7(E.macro[q ? MC_RUNOFF : MC_RUNAWAY]), lo = q ? 70.0f : 1400.0f, f5 = (q ? scr_base : scr_top) * 3.0f;
         g_lp[q] = g * g * 0.85f;
         while (f5 < lo) f5 *= 2.0f;
         while (f5 > lo * 2.0f) f5 *= 0.5f;

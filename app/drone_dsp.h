@@ -51,7 +51,7 @@ typedef struct {
                           * drift, wander), STARVE (a dying supply); MACRO 2: TANGLE (the layers on
                           * modulate each other: each one's loudness moves the next one's K1, and, further up, its
                           * sound ring-modulates the next), RUNAWAY (feedback screaming high, a fifth over the
-                          * lowest note), RUNOFF (the same, low), DELUGE (a bubbling sub under a wall) (not saved) */
+                          * highest note), RUNOFF (low, a fifth over the lowest), DELUGE (a bubbling sub under a wall) (not saved) */
     uint8_t pk[PU_N][4]; /* each punch's own knobs (held with its key: K1..K3, K4 FADE; DR_PK_DEF the sound it had before) */
     uint16_t punch;      /* the punches held: bit PU_* (not saved) */
     uint8_t freeze;      /* the reverb (and the delay) hold what they have, forever (not saved) */
