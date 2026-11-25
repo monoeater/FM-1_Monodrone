@@ -15,6 +15,8 @@ A drone instrument for the M-VAVE FM-1. Four layers of held chords from one of t
 
 Firmware identity: `FM-1_77` followed by the version (1.0 is `FM-1_77010000`).
 
+Consider supporting more development [here](https://ko-fi.com/michael_monoeater).
+
 ## Building
 
 MONODRONE is an app on [fm1-base](https://github.com/charlesvestal/fm1-base) (in `base/`, a submodule, with
