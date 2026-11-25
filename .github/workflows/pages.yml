@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: MPL-2.0
+# MONODRONE's site on GitHub Pages (Settings > Pages > Source: GitHub Actions), on every push to main and after
+# every release: the manual (docs/manual) and the browser emulator always; once there is a release, also the front
+# page, the web installer and the download (base/tools/make_site.py, with the release's attested package).
+name: Site
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["Build and attest firmware"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  site:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Prepare fm1-base and Emscripten
+        run: |
+          set -euo pipefail
+          git -C base apply ../tools/base_local.patch
+          sudo apt-get install -y -qq libfribidi0
+          python3 -m pip install --quiet pillow
+          git clone -q https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          git -C "$RUNNER_TEMP/emsdk" checkout -q a2b92777574c2feda07994cd4f1079a3dfc151f8   # emsdk 6.0.10
+          "$RUNNER_TEMP/emsdk/emsdk" install 6.0.10
+          "$RUNNER_TEMP/emsdk/emsdk" activate 6.0.10
+      - name: Build the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          set +u; source "$RUNNER_TEMP/emsdk/emsdk_env.sh"; set -u
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName 2>/dev/null || true)
+          out=build/site
+          if [ -n "$tag" ]; then
+            version=${tag#v}
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern "monodrone-$version.fwsc" --dir build/rel
+            ./build.sh --web --release "$version"
+            python3 base/tools/make_site.py app "build/rel/monodrone-$version.fwsc" "$version" "$out"
+          else
+            # no release yet: the manual, the emulator and a front page pointing at them
+            ./build.sh --web
+            mkdir -p "$out"
+            cp -r app/build/emu "$out/emu"
+            sed -e 's/^This is version {{VERSION}}.*/There is no release yet: these are the manual and the emulator of the version in development./' -e '/{{PKG}}/d' -e '/(install\/)/d' app/site/landing.md > build/landing.md
+            python3 - <<'PY'
+          import html, re
+          md = open("build/landing.md").read().split("\n")
+          out, para = [], []
+          def inline(s):
+              s = html.escape(s, quote=False)
+              s = re.sub(r"!\[([^\]]*)\]\(([^) ]+)[^)]*\)", r'<img src="\2" alt="\1" width="480" style="image-rendering:pixelated">', s)
+              s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+              return re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+          items = []
+          for line in md + [""]:
+              if line.startswith("# "): out.append("<h1>%s</h1>" % inline(line[2:])); continue
+              if line.startswith("- "): items.append(inline(line[2:])); continue
+              if line.startswith("  ") and items: items[-1] += " " + inline(line.strip()); continue
+              if items: out.append("<ul>%s</ul>" % "".join("<li>%s</li>" % i for i in items)); items = []
+              if line.strip(): para.append(inline(line.strip()))
+              elif para: out.append("<p>%s</p>" % " ".join(para)); para = []
+          page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                  '<title>MONODRONE</title><style>body{background:#0a0b09;color:#d6d2ba;font:17px/1.55 system-ui,sans-serif;max-width:760px;margin:0 auto;padding:32px 16px}'
+                  'h1{color:#aae628;font-size:56px;letter-spacing:.04em;margin:0 0 12px}a{color:#aae628}img{max-width:100%;border:1px solid #30342a}code{color:#96c8c4}</style></head><body>'
+                  + "\n".join(out) + "</body></html>")
+          open("build/site/index.html", "w").write(page)
+          PY
+          fi
+          mkdir -p "$out/img"
+          cp app/site/img/* "$out/img/"
+          rm -rf "$out/manual" && cp -r docs/manual "$out/manual"
+          ls -R "$out" | head -40
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+      - id: deploy
+        uses: actions/deploy-pages@v4
