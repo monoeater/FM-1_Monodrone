@@ -118,6 +118,7 @@ jobs:
     permissions:
       contents: write
       attestations: read
+      actions: write
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -141,5 +142,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+        run: |
+          gh release edit "$GITHUB_REF_NAME" --draft=false
+          gh workflow run pages.yml --ref main   # the site, with this release's installer and download
 
