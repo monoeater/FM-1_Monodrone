@@ -169,7 +169,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   .grid2{grid-template-columns:minmax(0,1fr)}
   .pagecard{grid-template-columns:minmax(0,1fr)}
   .pagecard .shots{flex-direction:row}
+  .pagecard .shots{justify-content:center}
   .pagecard .shots img{max-width:48%}
+  .pagecard .shots img:only-child{max-width:240px}
+  .shot{margin-inline:auto}
   .row{grid-template-columns:minmax(0,1fr);gap:2px}
   .act{grid-template-columns:minmax(0,1fr);gap:2px}
   .anat{grid-template-columns:minmax(0,1fr)}
