@@ -23,7 +23,18 @@ def bits(f):
             out.append(v)
     return out
 ink = bits(lambda r, g, b, a: a > 128 and r > 128)
+solid = [[im.getpixel((x, y))[3] > 100 for x in range(N)] for y in range(N)]
+outside = [[False] * N for _ in range(N)]          # the mask: the sticker with its holes filled (flood from the edge)
+todo = [(x, y) for x in range(N) for y in (0, N - 1)] + [(x, y) for y in range(N) for x in (0, N - 1)]
+while todo:
+    x, y = todo.pop()
+    if 0 <= x < N and 0 <= y < N and not outside[y][x] and not solid[y][x]:
+        outside[y][x] = True
+        todo += [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+_px = im.getpixel
+im.getpixel = lambda xy: (0, 0, 0, 0 if outside[xy[1]][xy[0]] else 255)
 mask = bits(lambda r, g, b, a: a > 100)
+im.getpixel = _px
 def arr(name, d):
     s = f"static const uint8_t {name}[LOGO_N * LOGO_ROW] = {{\n"
     for i in range(0, len(d), 16):
