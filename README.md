@@ -2,6 +2,8 @@
 
 A drone instrument for the M-VAVE FM-1. Four layers of held chords from one of twelve engines run into dirt, filter, tape delay and reverb. There is no sequencer. Set things running, bend them live, move between sixteen scenes, each with its own animated 1-bit place. Twelve punch effects on the keys, eight macros.
 
+Like all custom FM-1 firmware, this was made with AI. I am not happy about it either, but here we are.
+
 ![MONODRONE on the FM-1's screen](docs/img/screen.png)
 
 - **Install:** the [web installer](https://monoeater.github.io/FM-1_Monodrone/install/) (Chrome or Edge, FM-1 over
@@ -14,8 +16,6 @@ A drone instrument for the M-VAVE FM-1. Four layers of held chords from one of t
 - **Try it:** the [browser emulator](https://monoeater.github.io/FM-1_Monodrone/emu/).
 
 Firmware identity: `FM-1_77` followed by the version (1.0 is `FM-1_77010000`).
-
-Consider supporting more development [here](https://ko-fi.com/michael_monoeater).
 
 ## Building
 
