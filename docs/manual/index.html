@@ -42,7 +42,8 @@ nav.top .links a:hover{color:var(--text);background:var(--raise)}
 
 /* hero */
 .hero{padding-block:44px 30px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:36px;align-items:center}
-.hero h1{font-size:clamp(52px,9vw,104px);line-height:.86;color:var(--tox)}
+.hero>div:first-child{container-type:inline-size;min-width:0}
+.hero h1{font-size:clamp(36px,18cqi,92px);line-height:.86;color:var(--tox);white-space:nowrap}
 .hero .tagline{font-family:var(--f-disp);font-weight:700;font-size:clamp(17px,2vw,21px);letter-spacing:.14em;color:var(--rust);margin-top:14px}
 .hero .lede{margin-top:18px;color:var(--text);font-size:17px}
 .hero .facts{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:20px;font-family:var(--f-disp);font-weight:600;letter-spacing:.1em;font-size:14px;color:var(--ash)}
@@ -186,7 +187,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <header class="wrap hero" id="top">
   <div>
     <div class="eyebrow">A drone instrument for the M-VAVE FM-1</div>
-    <h1>MONO<br>DRONE</h1>
+    <h1>MONODRONE</h1>
     <div class="tagline">MUSIC FOR IRRADIATED LANDSCAPES</div>
     <p class="lede">Four layers of drone, each a held chord on one of twelve engines, all running into one chain of dirt, filter, tape delay and reverb. There is no sequencer. You set things running, bend them live, and move between scenes.</p>
     <div class="facts"><span><b>4</b> LAYERS</span><span><b>12</b> ENGINES</span><span><b>12</b> PUNCH EFFECTS</span><span><b>8</b> MACROS</span><span><b>16</b> SCENES</span><span><b>8</b> PLACES</span></div>
