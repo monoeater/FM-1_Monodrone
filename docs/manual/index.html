@@ -111,8 +111,9 @@ svg.panel{width:100%;height:auto;display:block;user-select:none}
 .pg .pn{font-family:var(--f-disp);font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--tox);margin-bottom:2px}
 .kt{width:100%;border-collapse:collapse;font-size:14.5px}
 .kt td{padding:5px 8px 5px 0;border-top:1px solid var(--line);vertical-align:top;line-height:1.4}
-.kt td.kn{font:600 12px var(--f-mono);color:var(--ice);width:84px;padding-top:7px;white-space:nowrap}
-.kt td.kr{font:500 12px var(--f-mono);color:var(--ash);width:116px;padding-top:7px;text-align:right}
+.kt td.kn{font:600 12px var(--f-mono);color:var(--ice);width:84px;padding-top:7px;overflow-wrap:anywhere}
+.kt td.kr{font:500 12px var(--f-mono);color:var(--ash);width:116px;padding-top:7px;text-align:right;overflow-wrap:anywhere}
+.kt{table-layout:fixed}
 .tblwrap{overflow-x:auto}
 table.big{width:100%;border-collapse:collapse;font-size:15px;min-width:620px}
 table.big th{text-align:left;font:600 12px var(--f-disp);letter-spacing:.14em;color:var(--ash);text-transform:uppercase;padding:6px 10px 6px 0;border-bottom:1px solid var(--line)}
@@ -162,6 +163,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   .scenes,.places{grid-template-columns:repeat(2,minmax(0,1fr))}
   .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid3{grid-template-columns:minmax(0,1fr)}
+  #pagecards{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:720px){
   .grid2{grid-template-columns:minmax(0,1fr)}
