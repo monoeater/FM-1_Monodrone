@@ -8,6 +8,11 @@
 
 #define APP_NAME "MONODRONE"
 #define APP_SPLASH_RGB RGB(170, 230, 40)
+#define APP_SPLASH                       /* the first screen: the head and the name (app.c, the loading screen) */
+void app_splash(void);
+#define APP_SYS_SCREENS                  /* the update's screens: the panel's look (app.c) */
+void app_ota_show(uint32_t step, int32_t code);
+void app_uboot_show(const char *why);
 #define APP_BLOCK 256u                   /* frames per audio block: 5.8 ms at 44.1 kHz */
 #define APP_TOUCH                        /* the keys' pressure swells the drone they hold (lib/touch.h) */
 #define APP_CANVAS_PX (240u * 112u)      /* the tallest band drawn at once */

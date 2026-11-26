@@ -17,6 +17,7 @@
 #include <stddef.h>
 #include "drone_dsp.h"
 #include "land.h"
+#include "logo.h"
 static uint32_t land_of(uint32_t b) { b /= 16u; return b < NLAND ? b : NLAND - 1u; }   /* a scene's place byte to its place */
 
 /* ------------------------------------------------------------------------------------------------- colours --- */
@@ -1005,19 +1006,204 @@ static void draw_knobs(void)
     cv_blit(0, 186);
 }
 
+
+/* ------------------------------------------------------------------------------------ the loading screen --- */
+/* The MONOEATER head (logo.h) in ink on the dark, MONODRONE in its green under it; fog drifting behind the head,
+ * ash falling over everything, Geiger sparks, the picture tearing now and then. It comes up out of the dark, holds,
+ * and falls away into the panel; anything pressed or turned ends it at once (and does what it does). The splash
+ * (APP_SPLASH) is its first frame, still */
+#define INTRO_MS 3400u
+#define LOGO_X ((240 - LOGO_N) / 2)
+#define LOGO_Y 12
+#define INTRO_NAME_Y 142
+#define INTRO_TAG_Y 182
+static uint8_t intro_on;
+static uint32_t intro_t0, intro_last, intro_rng = 0x2545F491u;
+static struct { int16_t x, y; uint8_t s; } iash[40];       /* x, y in 1/16 px */
+static int16_t ispark[5][3];
+static inline uint32_t irnd(void) { intro_rng ^= intro_rng << 13; intro_rng ^= intro_rng >> 17; intro_rng ^= intro_rng << 5; return intro_rng; }
+static inline int logo_bit(const uint8_t *b, int32_t x, int32_t y)
+{
+    return (uint32_t)x < LOGO_N && (uint32_t)y < LOGO_N && ((b[(uint32_t)y * LOGO_ROW + ((uint32_t)x >> 3)] >> (7 - (x & 7))) & 1u);
+}
+
+/* one frame at t ms (0: the splash, still: the head and the name whole, no weather) */
+static void intro_draw(uint32_t t)
+{
+    static const char *const TAG = "MUSIC FOR IRRADIATED LANDSCAPES";
+    int still = t == 0;
+    int32_t in = still ? 17 : (int32_t)(t * 17u / 900u);                       /* the head coming up: 0..16 */
+    int32_t out = t > INTRO_MS - 450u ? (int32_t)((t - (INTRO_MS - 450u)) * 17u / 450u) : 0;   /* and going */
+    int32_t tone = in - out;
+    int32_t tear_y = -1, tear_h = 0, tear_dx = 0;
+    int32_t fc[6][3];
+    if (tone > 16) tone = 16;
+    if (!still && (t / 90u) % 9u == 4u) {                       /* now and then the picture tears */
+        uint32_t h = (t / 90u) * 2654435761u;
+        tear_y = LOGO_Y + (int32_t)((h >> 8) % LOGO_N); tear_h = 3 + (int32_t)((h >> 16) % 9u); tear_dx = (int32_t)((h >> 4) % 15u) - 7;
+    }
+    for (int32_t i = 0; i < 6; i++) {                           /* the fog: six banks drifting at their own speeds */
+        int32_t span = 360, sp = 14 + i * 9;
+        fc[i][0] = (int32_t)(((t / (uint32_t)sp) + (uint32_t)i * 97u) % (uint32_t)span) - 60;
+        fc[i][1] = i < 4 ? 20 + i * 30 : 214 + (i - 4) * 18;
+        fc[i][2] = 38 + (i * 17) % 30;
+    }
+    if (!still && t - intro_last >= 16u) {                       /* the ash and the sparks move on */
+        uint32_t dt = (t - intro_last) / 16u;
+        if (dt > 4u) dt = 4u;
+        intro_last = t;
+        for (int32_t i = 0; i < 40; i++) {
+            if (!iash[i].s) { iash[i].x = (int16_t)((irnd() % 240u) * 16u); iash[i].y = (int16_t)(-(int32_t)(irnd() % 240u) * 16); iash[i].s = (uint8_t)(4u + irnd() % 8u); }
+            iash[i].y = (int16_t)(iash[i].y + (int32_t)iash[i].s * (int32_t)dt);
+            iash[i].x = (int16_t)(iash[i].x + ((int32_t)(irnd() % 5u) - 2 + 3) * (int32_t)dt);
+            if (iash[i].y >= 240 * 16 || iash[i].x >= 240 * 16) iash[i].s = 0;
+        }
+        for (int32_t i = 0; i < 5; i++) if (ispark[i][2] > 0) ispark[i][2]--;
+        if ((irnd() % 7u) == 0) {
+            int16_t *k = ispark[irnd() % 5u];
+            k[0] = (int16_t)(8 + irnd() % 224u); k[1] = (int16_t)(8 + irnd() % 224u); k[2] = 4;
+        }
+    }
+    for (int32_t b = 0; b < 3; b++) {                            /* three bands of 80 rows */
+        int32_t y0 = b * 80;
+        cv_begin(240, 80, K_BG);
+        for (int32_t y = 0; y < 80; y++) {
+            int32_t gy = y0 + y, ly = gy - LOGO_Y, sh = gy >= tear_y && gy < tear_y + tear_h ? tear_dx : 0;
+            for (int32_t x = 0; x < 240; x++) {
+                int32_t lx = x - LOGO_X + sh;
+                int32_t th = BAYER[gy & 3][x & 3];
+                if (logo_bit(LOGO_MASK, lx, ly)) {
+                    if (logo_bit(LOGO_INK, lx, ly) && tone > th) cv_pset(x, y, K_INK);
+                    continue;
+                }
+                if (still || (gy > INTRO_NAME_Y - 6 && gy < INTRO_TAG_Y + 22)) continue;
+                int32_t f = 0;                                   /* the fog behind: the thickest bank here */
+                for (int32_t i = 0; i < 6; i++) {
+                    int32_t dx = x - fc[i][0], dy = (gy - fc[i][1]) * 2, r = fc[i][2], d = dx * dx + dy * dy;
+                    if (d < r * r) { int32_t v = 5 * (r * r - d) / (r * r) + 1; if (v > f) f = v; }
+                }
+                if (f - out / 3 > th) cv_pset(x, y, K_INK);
+            }
+        }
+        cv_oy = -y0; cv_y0 = 0; cv_y1 = 80;                     /* (the name and the sparks in screen rows) */
+        if (still || t > 500u) {                                 /* the name, typed in letter by letter */
+            char nm[10] = "MONODRONE";
+            uint32_t n = still ? 9u : (t - 500u) / 55u;
+            if (n < 9u) nm[n] = 0;
+            if (out < 12) {
+                cv_text((240 - text_w(&FONT_L, "MONODRONE")) / 2, INTRO_NAME_Y, &FONT_L, nm, K_TOX);
+                if (still || t > 1100u) cv_text((240 - text_w(&FONT_XS, TAG)) / 2, INTRO_TAG_Y, &FONT_XS, TAG, K_RUST);
+            }
+        }
+        if (!still) {
+            for (int32_t i = 0; i < 40; i++)
+                if (iash[i].s && iash[i].y >= 0) cv_pset(iash[i].x / 16, iash[i].y / 16, K_INK);
+            for (int32_t i = 0; i < 5; i++)
+                if (ispark[i][2] > 0) {
+                    int32_t sx = ispark[i][0], sy = ispark[i][1], r = 5 - ispark[i][2];
+                    cv_pset(sx, sy, K_BONE); cv_pset(sx - r, sy, K_BONE); cv_pset(sx + r, sy, K_BONE);
+                    cv_pset(sx, sy - r, K_BONE); cv_pset(sx, sy + r, K_BONE);
+                }
+            if (out < 12) {                                       /* loading: a line along the bottom */
+                int32_t w = (int32_t)(t * 200u / (INTRO_MS - 450u));
+                cv_rect(20, 226, 200, 1, K_LINE);
+                cv_rect(20, 226, w > 200 ? 200 : w, 1, K_TOX);
+            }
+        }
+        cv_oy = cv_y0 = 0;
+        cv_blit(0, (uint32_t)y0);
+    }
+}
+
+void app_splash(void) { intro_draw(0); }
+
+/* the update's screens (APP_SYS_SCREENS, base/device: an install's steps, the chip's update mode), as the panel is:
+ * the header, the head, what is happening in green; the five steps along the bottom */
+static void sys_screen(const char *tag, const char *big, uint16_t bigc, const char *l1, const char *l2, int32_t step, int failed)
+{
+    static const char *const STEP[5] = {"PACKAGE", "CHECK", "LOADER", "CONFIRM", "RESTART"};
+    for (int32_t b = 0; b < 3; b++) {
+        int32_t y0 = b * 80;
+        cv_begin(240, 80, K_BG);
+        cv_oy = -y0; cv_y0 = 0; cv_y1 = 80;
+        for (int32_t y = 0; y < 80; y++) {
+            int32_t ly = y0 + y - 34;
+            if ((uint32_t)ly >= LOGO_N) continue;
+            for (int32_t x = 0; x < LOGO_N; x++)
+                if (logo_bit(LOGO_INK, x, ly)) cv_pset(LOGO_X + x, y0 + y, K_INK);
+        }
+        {
+            int32_t x = cv_text(8, 4, &FONT_B, "MONODRONE", K_TOX);
+            cv_text(x + 10, 6, &FONT_XS, tag, K_BONE);
+            cv_rect(0, 24, 240, 1, K_LINE);
+        }
+        cv_text((240 - text_w(&FONT_M, big)) / 2, 160, &FONT_M, big, bigc);
+        if (step > 0) {
+            for (int32_t i = 0; i < 5; i++) {
+                int32_t x = 6 + i * 46;
+                uint16_t c = i + 1 < step ? K_BONE : i + 1 == step ? (failed ? K_BLOOD : K_TOX) : K_LINE;
+                cv_rect(x, 194, 44, 4, c);
+                cv_text(x + (44 - text_w(&FONT_T, STEP[i])) / 2, 202, &FONT_T, STEP[i], i + 1 <= step ? K_BONE : K_ASH);
+            }
+        } else if (l1) cv_text((240 - text_w(&FONT_XS, l1)) / 2, 194, &FONT_XS, l1, K_ASH);
+        if (l2) cv_text((240 - text_w(&FONT_XS, l2)) / 2, 220, &FONT_XS, l2, K_BONE);
+        cv_oy = cv_y0 = 0;
+        cv_blit(0, (uint32_t)y0);
+    }
+    lcd_sync();
+}
+
+void app_ota_show(uint32_t step, int32_t code)
+{
+    static int32_t last = 1;
+    if (step < 9u) {
+        last = step >= 1u && step <= 5u ? (int32_t)step : 1;
+        sys_screen("UPDATE", step == 5u ? "RESTARTING" : "UPDATING", K_TOX, 0, "KEEP IT PLUGGED IN", last, 0);
+    } else if (code == 1) sys_screen("UPDATE", "DRY RUN OK", K_TOX, 0, "NOTHING WAS CHANGED", 5, 0);
+    else sys_screen("UPDATE", "UPDATE FAILED", K_BLOOD, 0, "TRY AGAIN FROM THE INSTALLER", last, 1);
+}
+
+void app_uboot_show(const char *why)
+{
+    const char *w = why;                 /* why, in the panel's words: "UPDATE MODE (REC)", "UBOOT (USB)" */
+    for (const char *p = why; *p; p++)
+        if (p[0] == '(' && p[1] == 'R') { w = "REC HELD AT START"; break; }
+        else if (p[0] == '(' && p[1] == 'U') { w = "ASKED FOR OVER USB"; break; }
+    sys_screen("UPDATE MODE", "UPDATE MODE", K_TOX, w, "OPEN THE WEB INSTALLER", 0, 0);
+}
+
 void app_ui_init(void)
 {
     touch_on(1);
     ui.focus = -1;
+    intro_on = 1;
+    intro_t0 = plat_ms();
+    intro_last = 0;
+}
+
+static void intro_end(void)
+{
+    intro_on = 0;
     lcd_fill(0, 0, 240, 240, K_BG);
     ui.redraw = 1;
-    app_say("MONODRONE", "PLAY TO START");
+    if (!any_on()) app_say("MONODRONE", "PLAY TO START");
 }
 
 void app_frame(void)
 {
     static uint32_t last_scope, last_cpu, msg_was;
     uint32_t now = plat_ms();
+    if (intro_on) {
+        uint32_t was_turned = ui.turned_at[0] ^ ui.turned_at[1] ^ ui.turned_at[2] ^ ui.turned_at[3];
+        input();
+        ann_tick(now);
+        if (ui.btn || ui.keys || ui.rn || was_turned != (ui.turned_at[0] ^ ui.turned_at[1] ^ ui.turned_at[2] ^ ui.turned_at[3])
+            || now - intro_t0 >= INTRO_MS) intro_end();
+        else {
+            if (now - intro_t0 - intro_last >= 33u || !intro_last) intro_draw(now - intro_t0 ? now - intro_t0 : 1u);
+            return;
+        }
+    }
     input();
     ann_tick(now);
     if (ui.msg_until && now >= ui.msg_until) { ui.msg_until = 0; ui.redraw = 1; }
@@ -1064,6 +1250,8 @@ int app_expect(const char *what, int *got)
     if (!strcmp(what, "sel")) *got = ui.sel;
     else if (!strcmp(what, "page")) *got = ui.page;
     else if (!strcmp(what, "fxmode")) *got = ui.fxmode;
+    else if (!strncmp(what, "sysota", 6)) { int q = atoi(what + 6); app_ota_show(q >= 90 ? 9u : (uint32_t)q, q == 91 ? 1 : -1); *got = 1; }   /* (test: the update's screens) */
+    else if (!strcmp(what, "sysuboot")) { app_uboot_show("UPDATE MODE (REC)"); *got = 1; }
     else if (!strcmp(what, "scene")) *got = st.cur;
     else if (!strcmp(what, "octave")) *got = octave;
     else if (!strcmp(what, "punch")) *got = C->punch;

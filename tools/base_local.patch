@@ -1,3 +1,51 @@
+diff --git a/device/main_fm1.c b/device/main_fm1.c
+index 8d05485..07eff3d 100644
+--- a/device/main_fm1.c
++++ b/device/main_fm1.c
+@@ -1148,8 +1148,12 @@ static void enter_uboot(const char *why)
+ {
+     fm1_clock_restore();                            /* (the chip's update mode at the stock clock) */
+     fm1_audio_stop();
++#ifdef APP_SYS_SCREENS
++    app_uboot_show(why);                            /* the app's own update mode screen */
++#else
+     lcd_fill(0, 0, 240, 240, C_BLACK);
+     sys_box(0, 110, 240, SYS_S, why, C_WHITE, 1);
++#endif
+     fm1_delay_ms(20);
+     usb_detach();
+     fm1_delay_ms(30);
+diff --git a/device/unity.c b/device/unity.c
+index dc3d37e..820ce45 100644
+--- a/device/unity.c
++++ b/device/unity.c
+@@ -268,6 +268,13 @@ static int ota_fread(uint32_t off, void *p, uint32_t n) { return st_read(off, p,
+ static void ota_show(uint32_t step, int32_t code)
+ {
+     static const char *const STEP[] = {"", "PACKAGE", "CHECK HEAD", "LOADER", "CONFIRM", "RESTART"};
++#ifdef APP_SYS_SCREENS                                    /* the app's own update screen */
++    app_ota_show(step, code);
++    if (step >= 9u)
++        fm1_delay_ms(1500);
++    (void)STEP;
++    return;
++#endif
+     lcd_fill(0, 0, 240, 240, C_BLACK);
+     sys_box(0, 92, 240, SYS_S, "UPDATE", C_WHITE, 1);
+     if (step < 9u) {
+diff --git a/include/plat.h b/include/plat.h
+index 55e94c5..111d825 100644
+--- a/include/plat.h
++++ b/include/plat.h
+@@ -611,6 +611,8 @@ int app_stats_quiet(void);
+  *                   each advertising report a scan hears, a pairing's keys
+  *   APP_OVERLOAD    void app_overload(void)       the render took over 90 % of its time (shed voices)
+  *   APP_SPLASH      void app_splash(void)         the first screen at boot, instead of the name
++ *   APP_SYS_SCREENS void app_ota_show(uint32_t step, int32_t code), void app_uboot_show(const char *why)   the update's
++ *                   screens: its steps (1 PACKAGE .. 5 RESTART; 9 the result, code 1 a dry run) and the chip's update mode
+  *   APP_GAIN(m)     the render's gain from MASTER's position m (0..4096; default the square, m * m >> 12)
+  *   APP_BATTERY_RAW (no function) plat_battery_raw is built (the battery's reading, for an app's own volts)
+  *   APP_CPU_KHZ     (no function) plat_cpu_khz is built (the CPU's clock)
 diff --git a/tools/build.py b/tools/build.py
 index 78c3b21..49c96bf 100755
 --- a/tools/build.py

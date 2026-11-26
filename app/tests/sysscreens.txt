@@ -1,0 +1,14 @@
+# the loading screen, then the update screens (APP_SYS_SCREENS) drawn as the update draws them
+wait 900
+shot intro.png
+wait 4000
+expect sysota1 1
+shot u1.png
+expect sysota3 1
+shot u3.png
+expect sysota90 1
+shot u9.png
+expect sysota91 1
+shot u91.png
+expect sysuboot 1
+shot ub.png
