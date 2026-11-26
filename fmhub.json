@@ -1,7 +1,8 @@
 {
-  "what": "A drone instrument: four layers of held chords on twelve engines into dirt, filter, tape delay and reverb. Twelve punch effects on the keys, eight macros, sixteen scenes, each with its own animated 1-bit place.",
+  "what": "A performance oriented drone instrument: four layers of held chords on twelve engines into dirt, filter, tape delay and reverb. Twelve punch effects, eight macros, sixteen preset scenes, 8 animated 1-bit environments.",
   "author": "Michael Monoeater",
-  "kinds": "synth",
+  "kinds": "synth, drone",
+  "play": "https://monoeater.github.io/FM-1_Monodrone/emu/",
   "image": "docs/img/screen.png",
   "color": "#aae628",
   "sounds": "none",
