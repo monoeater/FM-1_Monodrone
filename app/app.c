@@ -227,10 +227,14 @@ static int store_valid(void)
 /* --------------------------------------------------------------------------------------------- the sound --- */
 static float out_f[2 * APP_BLOCK];
 static float gain_now;
+/* silent from power-on until a layer first sounds (PLAY, a note, MIDI): nothing at all while it starts, the global
+ * hiss and hum included, and never before the platform has read MASTER (its first half second runs at half volume,
+ * whatever the knob says). Then in over the usual few milliseconds */
+static volatile uint8_t out_open;
 void app_render(int32_t *lr, uint32_t n, uint32_t master_q12)
 {
     uint32_t i;
-    float gain = (float)master_q12 * (1.0f / 4096.0f) * 8300000.0f;
+    float gain = out_open ? (float)master_q12 * (1.0f / 4096.0f) * 8300000.0f : 0.0f;
     if (n > APP_BLOCK) n = APP_BLOCK;
     dr_render(out_f, n);
     for (i = 0; i < n; i++) {
@@ -1193,6 +1197,11 @@ void app_frame(void)
 {
     static uint32_t last_scope, last_cpu, msg_was;
     uint32_t now = plat_ms();
+    {
+        static uint32_t frames;
+        if (frames < 3u) frames++;
+        if (!out_open && frames >= 3u && any_on()) out_open = 1;    /* (MASTER read by the main loop by now) */
+    }
     if (intro_on) {
         uint32_t was_turned = ui.turned_at[0] ^ ui.turned_at[1] ^ ui.turned_at[2] ^ ui.turned_at[3];
         input();
