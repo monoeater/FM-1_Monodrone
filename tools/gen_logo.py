@@ -23,7 +23,7 @@ def bits(f):
             out.append(v)
     return out
 ink = bits(lambda r, g, b, a: a > 128 and r > 128)
-solid = [[im.getpixel((x, y))[3] > 100 for x in range(N)] for y in range(N)]
+solid = [[im.getpixel((x, y))[3] > 128 and im.getpixel((x, y))[0] > 128 for x in range(N)] for y in range(N)]   # (the ink itself: no dark edge)
 outside = [[False] * N for _ in range(N)]          # the mask: the sticker with its holes filled (flood from the edge)
 todo = [(x, y) for x in range(N) for y in (0, N - 1)] + [(x, y) for y in range(N) for x in (0, N - 1)]
 while todo:
