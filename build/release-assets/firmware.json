@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "id": "monodrone",
+  "name": "MONODRONE",
+  "author": "Michael",
+  "license": "MPL-2.0",
+  "tagline": "drones for the end of the world",
+  "description": "Four layers of drone, each a latched chord of up to four voices on one of twelve engines, into one chain of dirt, filter, tape delay and reverb. No sequencer: you set things running, bend them live and move between sixteen scenes, each with its own animated 1-bit place. Twelve punch effects on the keys, eight macros that move many settings at once, MIDI in over USB and TRS, and the output recordable over USB.",
+  "tags": ["ambient", "synth", "experimental"],
+  "install": "https://monoeater.github.io/FM-1_Monodrone/install/",
+  "site": "https://monoeater.github.io/FM-1_Monodrone/",
+  "source": "https://github.com/monoeater/FM-1_Monodrone",
+  "screenshot": "docs/img/screen.png",
+  "hardware": {
+    "models": ["FM-1"],
+    "flash": ["856014", "B36014"],
+    "features": ["usb-audio-in", "second-core", "velocity", "pressure", "screen-reader"]
+  },
+  "credits": "Built on fm1-base and felucca-bsp, from Felucca by Leo Kuroshita (Hügelton Instruments). Fonts: Barlow (SIL OFL 1.1)."
+}
