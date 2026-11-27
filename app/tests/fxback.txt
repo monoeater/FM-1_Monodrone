@@ -1,0 +1,15 @@
+# FX mode, then EDIT (its own page), then FX: back to the effects page, still in FX mode; FX again: out
+wait 1000
+tap FX
+wait 100
+expect fxmode 1
+tap EDIT
+wait 100
+expect fxmode 1
+tap FX
+wait 100
+expect fxmode 1
+expect page 4
+tap FX
+wait 100
+expect fxmode 0

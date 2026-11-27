@@ -691,7 +691,9 @@ static void input(void)
     /* FX: a mode. In it the keys switch the punches: on while held; held 2 s, or tapped twice, latched; pressed
      * again, off. ALGO turns the effects pages. FX again: the keys are notes again (latched punches stay) */
     if ((bdown >> B_FX) & 1u) {
+        int away = ui.fxmode && ui.page != PG_PUNCH && (ui.page < PG_DIRT || ui.page > PG_REVERB);
         ui.fxmode ^= 1u;
+        if (away) ui.fxmode = 1;         /* in FX mode on another page (EDIT, a macro): back to the effects, not out */
         if (ui.fxmode) { if (ui.fxpage < PG_DIRT || ui.fxpage > PG_REVERB) ui.fxpage = PG_DIRT; ui.page = ui.fxpage; app_say("FX", "KEYS ARE EFFECTS"); }
         else app_say("KEYS", "NOTES");
         ui.redraw = 1;

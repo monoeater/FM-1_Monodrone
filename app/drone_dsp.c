@@ -865,7 +865,8 @@ void dr_render(float *lr, uint32_t n)
 {
     uint32_t i, li;
     float bt = (float)n * ISR;                                   /* the block's length, s */
-    float wrate = 0.01f * fm_exp2f(u7(E.mod[MOD_SPEED]) * 8.0f);   /* the weather: 0.01..2.5 Hz */
+    float wrate = 0.01f * fm_exp2f(u7(E.mod[MOD_SPEED]) * 4.0f     /* the weather: SPEED 0.01..0.16 Hz (slow end */
+                                   + u7(E.macro[MC_UNREST]) * 4.0f);   /* roomy); UNREST quicker still, to 2.5 Hz */
     float wtone = u7(E.mod[MOD_TONE]), wfilt = u7(E.mod[MOD_FILTER]), wspace = u7(E.mod[MOD_SPACE]);
     float wv[6];
     if (n > MAXN) n = MAXN;
