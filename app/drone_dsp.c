@@ -515,6 +515,7 @@ static float punch_g[PU_N];
 static int16_t wb_buf[WB_N * 2u] PLAT_POOL;
 static int16_t sd_buf[SD_N] PLAT_POOL;
 static uint32_t wb_w, sd_w, gate_n, gate_on = 1u;
+static float scr_ein, scr_eout;
 static float wb_ph[2], sd_d, sd_out, ring_ph, ring_f = 80.0f, dec_ph, dec_h[2], gate_g = 1.0f, scr_ph, rot_ph;
 static wander_t pw[4];                                           /* WARBLE's drift, RING's carrier, ROTATE's speed */
 static float dc_x[2], dc_y[2], lim_g = 1.0f;
@@ -1144,14 +1145,25 @@ void dr_render(float *lr, uint32_t n)
             }
         }
         /* FILTER */
-        if (!fbypass)
+        if (!fbypass) {
+            float ein = 0.0f, eout = 0.0f;
             for (uint32_t c = 0; c < 2; c++) {
                 float lo, bp, hp;
+                ein += fm_fabsf(x[c]);
                 svf_run(&fl[c], &fcoef, g_scr > 0.001f ? sat(x[c] * scr_drive + scr_fb[c] * scr_fbk) : x[c], &lo, &bp, &hp);
                 scr_fb[c] = bp;
                 x[c] = lo * wlp + bp * wbp + hp * whp;
                 if (g_scr > 0.001f) x[c] = x[c] + (sat(x[c] * 2.5f) * 0.32f - x[c]) * g_scr;   /* (torn again, held in) */
+                eout += fm_fabsf(x[c]);
             }
+            /* SCREAM held to the level of what went in (a little under it: a squeal at 2 kHz sounds louder than its
+             * level), not to its own driven, saturated level */
+            if (g_scr > 0.001f) {
+                scr_ein += (ein - scr_ein) * 0.0008f; scr_eout += (eout - scr_eout) * (eout > scr_eout ? 0.006f : 0.0008f);
+                float gm = clampf(0.8f * scr_ein / (scr_eout + 1e-5f), 0.02f, 1.0f), gf = 1.0f + (gm - 1.0f) * g_scr;
+                x[0] *= gf; x[1] *= gf;
+            } else { scr_ein = 0.0f; scr_eout = 0.0f; }
+        }
         /* DELAY and REVERB, at half rate: in on even frames (averaged), out interpolated */
         float mi = (x[0] + x[1]) * 0.5f;
         if (half) {
