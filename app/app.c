@@ -651,6 +651,7 @@ static int32_t accel(int32_t e)          /* a fast turn goes further */
     return a >= 4 ? e * 4 : a >= 2 ? e * 2 : e;
 }
 
+static uint8_t glo_prev;                 /* the page before GLO went down (FX + GLO puts it back) */
 static void input(void)
 {
     static const uint8_t WK[16] = PLAT_WHITE_KEYS, BK[11] = PLAT_BLACK_KEYS;
@@ -690,6 +691,13 @@ static void input(void)
 
     /* FX: a mode. In it the keys switch the punches: on while held; held 2 s, or tapped twice, latched; pressed
      * again, off. ALGO turns the effects pages. FX again: the keys are notes again (latched punches stay) */
+    if ((((bdown >> B_GLO) & 1u) && ((btn >> B_FX) & 1u)) || (((bdown >> B_FX) & 1u) && ((btn >> B_GLO) & 1u))) {
+        /* FX + GLO (either first): every latched punch off at once; the page stays */
+        if ((bdown >> B_FX) & 1u) ui.page = glo_prev;   /* (GLO went first: back off its MIX page) */
+        ui.punch_latch = 0; ui.punch_skip = 0;
+        app_say("FX", "ALL OFF");
+        bdown &= ~((1u << B_FX) | (1u << B_GLO));
+    }
     if ((bdown >> B_FX) & 1u) {          /* FX: into FX mode; in it, the next effects page (DIRT, FILTER, DELAY, REVERB);
                                           * from another page, back to the effects. HOME leaves FX mode */
         if (!ui.fxmode) {
@@ -792,7 +800,7 @@ static void input(void)
         for (k = 0; k < MC_N; k++) C->macro[k] = 0;
         ui.env_snap = 1;
         app_say("MACROS", "ALL OFF");
-    } else if ((bdown >> B_GLO) & 1u) page_set(ui.page == PG_MIX ? PG_PAN : PG_MIX);
+    } else if ((bdown >> B_GLO) & 1u) { glo_prev = ui.page; page_set(ui.page == PG_MIX ? PG_PAN : PG_MIX); }
     if ((bdown >> B_LFO) & 1u) page_set(ui.page == PG_WEATHER ? PG_SCENE : PG_WEATHER);
     if ((bdown >> B_PLAY) & 1u) {
         if (sel_held) { mutate(); ui.sel_used = 1; } else play_toggle();
@@ -1279,6 +1287,7 @@ int app_expect(const char *what, int *got)
     if (!strcmp(what, "sel")) *got = ui.sel;
     else if (!strcmp(what, "page")) *got = ui.page;
     else if (!strcmp(what, "fxmode")) *got = ui.fxmode;
+    else if (!strcmp(what, "latched")) *got = ui.punch_latch;
     else if (!strncmp(what, "sysota", 6)) { int q = atoi(what + 6); app_ota_show(q >= 90 ? 9u : (uint32_t)q, q == 91 ? 1 : -1); *got = 1; }   /* (test: the update's screens) */
     else if (!strcmp(what, "sysuboot")) { app_uboot_show("UPDATE MODE (REC)"); *got = 1; }
     else if (!strcmp(what, "scene")) *got = st.cur;

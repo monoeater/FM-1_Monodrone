@@ -1,0 +1,28 @@
+# FX + GLO: every latched punch off at once (either held first); the page stays
+wait 1000
+tap FX
+wait 100
+tapkey 1
+tapkey 1
+wait 100
+tapkey 3
+tapkey 3
+wait 100
+expect latched 3
+press FX
+tap GLO
+release FX
+wait 100
+expect latched 0
+expect fxmode 1
+expect page 5
+tapkey 5
+tapkey 5
+wait 100
+expect latched 4
+press GLO
+tap FX
+release GLO
+wait 100
+expect latched 0
+expect page 5
