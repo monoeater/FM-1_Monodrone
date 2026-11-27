@@ -1303,6 +1303,8 @@ int app_expect(const char *what, int *got)
     else if (!strncmp(what, "scland", 6)) *got = st.sc[atoi(what + 6) % NSCENES].land;
     else if (!strncmp(what, "scfx", 4)) *got = st.sc[atoi(what + 4) % NSCENES].fx[0];
     else if (!strcmp(what, "freeze")) *got = C->freeze;
+    else if (!strncmp(what, "setmc", 5)) { int q = atoi(what + 5); C->macro[(q / 1000) % MC_N] = (uint8_t)(q % 1000 > 127 ? 127 : q % 1000); *got = 1; }   /* (test: setmcMVVV) */
+    else if (!strncmp(what, "layers", 6)) { int q = atoi(what + 6); for (uint32_t k = 0; k < DR_LAYERS; k++) C->L[k].on = (uint8_t)((q >> k) & 1); *got = 1; }   /* (test: layersMASK) */
     else if (!strcmp(what, "capture")) *got = C->capture;
     else if (!strncmp(what, "on", 2)) *got = C->L[atoi(what + 2) & 3].on;
     else if (!strncmp(what, "note", 4)) *got = C->L[atoi(what + 4) & 3].note[0];

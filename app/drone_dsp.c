@@ -515,7 +515,7 @@ static float punch_g[PU_N];
 static int16_t wb_buf[WB_N * 2u] PLAT_POOL;
 static int16_t sd_buf[SD_N] PLAT_POOL;
 static uint32_t wb_w, sd_w, gate_n, gate_on = 1u;
-static float scr_ein, scr_eout;
+static float scr_eout, verb_lvl, sd_hp;
 static float wb_ph[2], sd_d, sd_out, ring_ph, ring_f = 80.0f, dec_ph, dec_h[2], gate_g = 1.0f, scr_ph, rot_ph;
 static wander_t pw[4];                                           /* WARBLE's drift, RING's carrier, ROTATE's speed */
 static float dc_x[2], dc_y[2], lim_g = 1.0f;
@@ -975,6 +975,7 @@ void dr_render(float *lr, uint32_t n)
     /* the punches' own knobs (block rate) */
 #define PK(i, k) u7(E.pk[i][k])
     float bu_fz = 4.0f * fm_exp2f(PK(PU_BURN, 0) * 4.0f), bu_q = 64.0f * fm_exp2f(-PK(PU_BURN, 1) * 4.0f), bu_iq = 1.0f / bu_q;
+    float bu_pre = bu_fz * clampf(0.12f / (burn_ein * 0.5f + 1e-4f), 1.0f, 30.0f);   /* (BURN as hard on a quiet input as a loud one) */
     float vo_soak = 0.1f * fm_exp2f(PK(PU_VOID, 0) * 4.5f), vo_duck = 1.0f - PK(PU_VOID, 1) * 0.7f, vo_dark = PK(PU_VOID, 2);
     int sh_shift = (int)(PK(PU_SHATTER, 0) * 3.99f) - 2;
     uint32_t sh_reps = 1u + (uint32_t)(PK(PU_SHATTER, 1) * 12.0f);
@@ -1146,23 +1147,23 @@ void dr_render(float *lr, uint32_t n)
         }
         /* FILTER */
         if (!fbypass) {
-            float ein = 0.0f, eout = 0.0f;
+            float eout = 0.0f;
             for (uint32_t c = 0; c < 2; c++) {
                 float lo, bp, hp;
-                ein += fm_fabsf(x[c]);
                 svf_run(&fl[c], &fcoef, g_scr > 0.001f ? sat(x[c] * scr_drive + scr_fb[c] * scr_fbk) : x[c], &lo, &bp, &hp);
                 scr_fb[c] = bp;
                 x[c] = lo * wlp + bp * wbp + hp * whp;
                 if (g_scr > 0.001f) x[c] = x[c] + (sat(x[c] * 2.5f) * 0.32f - x[c]) * g_scr;   /* (torn again, held in) */
                 eout += fm_fabsf(x[c]);
             }
-            /* SCREAM held to the level of what went in (a little under it: a squeal at 2 kHz sounds louder than its
-             * level), not to its own driven, saturated level */
+            /* SCREAM held to the layers' level (a little under it: a squeal at 2 kHz sounds louder than its level), not
+             * to its own driven, saturated level; and not to what reaches it, which RUNAWAY's loops feed back from the
+             * output (held to that, it would spiral down to nothing) */
             if (g_scr > 0.001f) {
-                scr_ein += (ein - scr_ein) * 0.0008f; scr_eout += (eout - scr_eout) * (eout > scr_eout ? 0.006f : 0.0008f);
-                float gm = clampf(0.8f * scr_ein / (scr_eout + 1e-5f), 0.02f, 1.0f), gf = 1.0f + (gm - 1.0f) * g_scr;
+                scr_eout += (eout - scr_eout) * (eout > scr_eout ? 0.006f : 0.0008f);
+                float gm = clampf(1.6f * bus_env / (scr_eout + 1e-5f), 0.02f, 1.0f), gf = 1.0f + (gm - 1.0f) * g_scr;
                 x[0] *= gf; x[1] *= gf;
-            } else { scr_ein = 0.0f; scr_eout = 0.0f; }
+            } else scr_eout = 0.0f;
         }
         /* DELAY and REVERB, at half rate: in on even frames (averaged), out interpolated */
         float mi = (x[0] + x[1]) * 0.5f;
@@ -1188,7 +1189,11 @@ void dr_render(float *lr, uint32_t n)
             dly_out[0] = y; dly_out[1] = y2;
             /* the reverb: the dry and the echoes in, diffused, into four lines mixed (Hadamard) */
             float vi = (in + (y + y2) * 0.5f * echo) * 0.5f * vin;
-            if (g_sd > 0.001f) vi += sd_out * g_sd * sd_feed;              /* SHIMMER DOWN: the tail, an octave down, back in */
+            /* the tank kept off its rails: past a loud level the feedback eases, so nothing (SHIMMER DOWN's octave fed
+             * back, INFINITE's hold, SCREAM or BURN into them) can pin it at full scale, where the DC blocker after
+             * would leave silence until it drained */
+            float vsafe = verb_lvl > 0.3f ? 0.3f / verb_lvl : 1.0f;
+            if (g_sd > 0.001f) vi += sd_out * g_sd * sd_feed * vsafe;     /* SHIMMER DOWN: the tail, an octave down, back in */
             for (uint32_t k = 0; k < 4; k++) {                   /* four all-pass diffusers */
                 uint32_t base = APAT[k], len = APLEN[k];
                 float d = (float)ap_buf[base + ap_i[k]] * (1.0f / 32767.0f);
@@ -1208,9 +1213,10 @@ void dr_render(float *lr, uint32_t n)
             float h0 = verb_lp[0] + verb_lp[1], h1 = verb_lp[0] - verb_lp[1];
             float h2 = verb_lp[2] + verb_lp[3], h3 = verb_lp[2] - verb_lp[3];
             float m0 = (h0 + h2) * 0.5f, m1 = (h1 + h3) * 0.5f, m2 = (h0 - h2) * 0.5f, m3 = (h1 - h3) * 0.5f;
-            float in4[4] = {m0 * vg[0] + vi, m1 * vg[1], m2 * vg[2] + vi, m3 * vg[3]};
+            verb_lvl += ((fm_fabsf(o0) + fm_fabsf(o1) + fm_fabsf(o2) + fm_fabsf(o3)) * 0.25f - verb_lvl) * 0.003f;
+            float in4[4] = {m0 * vg[0] * vsafe + vi, m1 * vg[1] * vsafe, m2 * vg[2] * vsafe + vi, m3 * vg[3] * vsafe};
             for (uint32_t k = 0; k < 4; k++) {
-                verb_buf[verb_at[k] + verb_i[k]] = (int16_t)(clampf(in4[k], -1.0f, 1.0f) * 32767.0f);
+                verb_buf[verb_at[k] + verb_i[k]] = (int16_t)(clampf(sat(in4[k]), -1.0f, 1.0f) * 32767.0f);
                 verb_i[k] = verb_i[k] + 1u >= VLEN[k] ? 0u : verb_i[k] + 1u;
             }
             if (g_sd > 0.001f) {   /* SHIMMER DOWN: two read heads at half speed, crossfaded (an octave down) */
@@ -1229,7 +1235,8 @@ void dr_render(float *lr, uint32_t n)
                     float w = u < 0.5f ? u * 2.0f : 2.0f - u * 2.0f;   /* a triangle: each head silent at its jump */
                     acc += (y0 + (y1 - y0) * fr) * (1.0f / 32767.0f) * w;
                 }
-                sd_out = acc;
+                sd_hp += (acc - sd_hp) * 0.006f;                  /* (no DC round the loop) */
+                sd_out = acc - sd_hp;
                 sd_w = (sd_w + 1u) & (SD_N - 1u);
             } else sd_out = 0.0f;
             verb_prev[0] = verb_out[0]; verb_prev[1] = verb_out[1];
@@ -1247,8 +1254,8 @@ void dr_render(float *lr, uint32_t n)
         /* BURN: crushed fuzz, held to the level going in */
         burn_ein += (fm_fabsf(oL) + fm_fabsf(oR) - burn_ein) * 0.0008f;
         if (burn > 0.001f) {
-            float bl = fm_floorf(sat(oL * bu_fz) * bu_q) * bu_iq;
-            float br = fm_floorf(sat(oR * bu_fz) * bu_q) * bu_iq;
+            float bl = fm_floorf(sat(oL * bu_pre) * bu_q + 0.5f) * bu_iq;   /* (rounded: no offset, so a quiet input */
+            float br = fm_floorf(sat(oR * bu_pre) * bu_q + 0.5f) * bu_iq;   /* is crushed, not floored to nothing) */
             burn_eout += (fm_fabsf(bl) + fm_fabsf(br) - burn_eout) * 0.0008f;
             oL += (bl * burn_g - oL) * burn; oR += (br * burn_g - oR) * burn;
         }
@@ -1424,7 +1431,7 @@ void dr_render(float *lr, uint32_t n)
     }
     for (i = 0; i < 4; i++) FL(verb_lp[i]);
     for (i = 0; i < 2; i++) { FL(fl[i].ic1); FL(fl[i].ic2); FL(dc_x[i]); FL(dc_y[i]); FL(verb_out[i]); FL(dly_out[i]); FL(hold[i]); FL(void_lp[i]); }
-    FL(dly_lp); FL(dly_hp); FL(burn_eout); FL(hiss_crk); FL(sd_out); FL(scr_fb[0]); FL(scr_fb[1]); FL(wb_lp[0]); FL(wb_lp[1]);
+    FL(dly_lp); FL(dly_hp); FL(burn_eout); FL(hiss_crk); FL(sd_out); FL(sd_hp); FL(verb_lvl); FL(scr_fb[0]); FL(scr_fb[1]); FL(wb_lp[0]); FL(wb_lp[1]);
     /* the meters and the scope */
     {
         static float om;
