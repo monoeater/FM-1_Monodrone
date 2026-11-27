@@ -221,7 +221,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="step"><span class="n">1</span><p>Press <span class="k">PLAY</span>. The scene swells in over each layer's SWELL time.</p></div>
     <div class="step"><span class="n">2</span><p>Play a chord on the keys and let go. It keeps sounding: chords latch.</p></div>
     <div class="step"><span class="n">3</span><p>Turn <span class="k">K1</span>–<span class="k">K4</span> to shape the layer, <span class="k">ALGORITHM</span> to change its engine, <span class="k">PRESETS</span> to move to another scene.</p></div>
-    <div class="step"><span class="n">4</span><p>Tap <span class="k">FX</span> and hold a black key for a punch effect. Tap <span class="k">FX</span> again to play notes.</p></div>
+    <div class="step"><span class="n">4</span><p>Tap <span class="k">FX</span> and hold a black key for a punch effect. <span class="k">HOME</span> to play notes again.</p></div>
   </div>
 </section>
 
@@ -293,7 +293,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="step"><span class="n" style="color:var(--rust)">1</span><p>Tap <span class="k">FX</span>. It lights, and the keys switch effects instead of playing notes.</p></div>
     <div class="step"><span class="n" style="color:var(--rust)">2</span><p><b>Hold</b> a key: the effect is on while you hold it.</p></div>
     <div class="step"><span class="n" style="color:var(--rust)">3</span><p><b>Latch</b> it: hold it 2 s, or tap it twice. Press it again to let it go.</p></div>
-    <div class="step"><span class="n" style="color:var(--rust)">4</span><p>Tap <span class="k">FX</span> again for notes. Latched effects keep going.</p></div>
+    <div class="step"><span class="n" style="color:var(--rust)">4</span><p><span class="k">FX</span> again: the next effects page. <span class="k">HOME</span> for notes. Latched effects keep going.</p></div>
   </div>
   <div class="tblwrap"><div class="kbd" id="kbd" role="group" aria-label="Punch keys"></div></div>
   <div class="grid2" style="margin-top:14px">
@@ -472,7 +472,7 @@ const PAGES=[
  {btn:'LFO',color:'text',note:'WEATHER, a slow wind through everything. Tap again for SCENE.',shots:['s_weather','s_scene'],pages:[
    ['WEATHER',[['SPEED','How fast the wind blows','0–100'],['TIMBRE','How far it moves each layer\'s K1','0–100'],['FILTER','How far it moves the filter','0–100'],['ROOM','How far it moves the delay and reverb','0–100']]],
    ['SCENE',[['MORPH','How slowly a new scene glides in','0.1 – 20 s'],['PLACE','The picture, one place per click','8 places']]]]},
- {btn:'FX',color:'rust',note:'Turns FX mode on: the keys become punches and ALGORITHM turns these four pages. FX again for notes.',shots:['s_dirt','s_punch'],pages:[
+ {btn:'FX',color:'rust',note:'Turns FX mode on: the keys become punches. FX again, or ALGORITHM, turns these four pages. HOME for notes.',shots:['s_dirt','s_punch'],pages:[
    ['DIRT',[['DRIVE','Saturation','0–100'],['CRUSH','Bit reduction','0–100'],['RATE','Sample-rate reduction','0–100'],['MIX','Dry to dirty','0–100']]],
    ['FILTER',[['CUTOFF','Where it cuts','0–100'],['RESO','Resonance','0–100'],['MODE','Low-pass through band-pass to high-pass','LOW · BAND · HIGH'],['SWEEP','How far its own slow wander moves the cutoff','0–100']]],
    ['DELAY',[['TIME','The tape delay\'s time','20 ms – 1.5 s'],['FDBK','Repeats','0–100'],['TONE','Darker to brighter repeats','0–100'],['MIX','How much','0–100']]],
@@ -521,7 +521,7 @@ add('OCTUP','OCT+','The keyboard\'s octave, up.','s_layer',[
  ['SEL','Tap (SEL held)','The selected layer\'s chord moves up an octave, gliding there. It stays when you let go.']]);
 add('FX','FX','Effects: a mode for the keys.','s_dirt',[
  ['','Tap','FX mode on (lit): the keys switch the punch effects, ALGORITHM turns the effects pages, and the screen shows DIRT, FILTER, DELAY or REVERB.'],
- ['FX','Tap (in FX mode)','Back to notes. Latched punches keep going. HOME does the same.']]);
+ ['FX','Tap (in FX mode)','The next effects page: DIRT, FILTER, DELAY, REVERB, round. From another page (EDIT, a macro), back to the effects. HOME leaves FX mode.']]);
 add('SEL','SEL','A modifier: hold it.','s_layer',[
  ['SEL','Hold + turn knobs','Try anything: let go and every knob springs back.'],
  ['SEL','Hold + white key','Recall scene 1–16.'],

@@ -54,7 +54,7 @@ wait 100
 expect punch 0
 turn ALGO 1
 expect page 5
-tap FX
+tap HOME
 tapkey b0
 wait 200
 expect punch 0
@@ -155,8 +155,9 @@ expect punch 1
 tapkey b0
 wait 100
 expect punch 0
-tap FX
-# (out of FX mode: back on the page it came from, MACRO)
+tap HOME
+expect fxmode 0
+tap ENV
 expect page 12
 # SEL held: knobs for now; let go: back
 press SEL

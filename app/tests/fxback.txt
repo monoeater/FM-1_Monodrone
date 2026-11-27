@@ -1,26 +1,30 @@
-# FX mode, then EDIT (its own page), then FX: back to the effects page, still in FX mode; FX again: out
+# FX: into FX mode on the effects; FX again: the next effects page, round; from another page (EDIT): back to the
+# effects; only HOME leaves FX mode
 wait 1000
-tap FX
-wait 100
-expect fxmode 1
-tap EDIT
-wait 100
-expect fxmode 1
 tap FX
 wait 100
 expect fxmode 1
 expect page 4
 tap FX
 wait 100
-expect fxmode 0
-expect page 0
-# from the reverb page too: FX out goes back to the page FX came from
+expect page 5
+tap FX
+tap FX
+wait 100
+expect page 7
+tap FX
+wait 100
+expect page 4
+expect fxmode 1
 tap EDIT
 wait 100
+expect fxmode 1
+expect page 1
 tap FX
 wait 100
 expect fxmode 1
-tap FX
+expect page 4
+tap HOME
 wait 100
 expect fxmode 0
-expect page 1
+expect page 0
