@@ -326,6 +326,7 @@ static struct {
     uint32_t pkeys;                      /* the keys held now that are not notes (punches, slots) */
     uint8_t fxmode;                      /* FX mode: the keys switch the punches */
     uint8_t fxpage;
+    uint8_t fxback;                      /* the page FX mode came from (out of FX mode: back to it) */
     uint8_t home_used;
     uint8_t env_snap, env_came;          /* ENV held snapped a macro (or reset them): its release is not a page; it brought MACRO */
     uint8_t pedit, pback;                /* the punch whose knobs show (its key held, FX mode; 0: none), the page before */
@@ -694,8 +695,16 @@ static void input(void)
         int away = ui.fxmode && ui.page != PG_PUNCH && (ui.page < PG_DIRT || ui.page > PG_REVERB);
         ui.fxmode ^= 1u;
         if (away) ui.fxmode = 1;         /* in FX mode on another page (EDIT, a macro): back to the effects, not out */
-        if (ui.fxmode) { if (ui.fxpage < PG_DIRT || ui.fxpage > PG_REVERB) ui.fxpage = PG_DIRT; ui.page = ui.fxpage; app_say("FX", "KEYS ARE EFFECTS"); }
-        else app_say("KEYS", "NOTES");
+        if (ui.fxmode) {
+            if (!away) ui.fxback = ui.page;  /* (the page to come back to) */
+            if (ui.fxpage < PG_DIRT || ui.fxpage > PG_REVERB) ui.fxpage = PG_DIRT;
+            ui.page = ui.fxpage; app_say("FX", "KEYS ARE EFFECTS");
+        } else {                             /* out: off the effects pages, back where it was */
+            uint8_t b = ui.fxback;
+            if (b == PG_PUNCH || (b >= PG_DIRT && b <= PG_REVERB)) b = PG_LAYER;
+            ui.page = b; ui.pedit = 0;
+            app_say("KEYS", "NOTES");
+        }
         ui.redraw = 1;
     }
     int fx_held = ui.fxmode;

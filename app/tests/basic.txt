@@ -156,9 +156,9 @@ tapkey b0
 wait 100
 expect punch 0
 tap FX
-# SEL held: knobs for now; let go: back
-tap ENV
+# (out of FX mode: back on the page it came from, MACRO)
 expect page 12
+# SEL held: knobs for now; let go: back
 press SEL
 turn K2 40
 expect macro1 40

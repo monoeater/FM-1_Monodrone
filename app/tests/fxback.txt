@@ -13,3 +13,14 @@ expect page 4
 tap FX
 wait 100
 expect fxmode 0
+expect page 0
+# from the reverb page too: FX out goes back to the page FX came from
+tap EDIT
+wait 100
+tap FX
+wait 100
+expect fxmode 1
+tap FX
+wait 100
+expect fxmode 0
+expect page 1
