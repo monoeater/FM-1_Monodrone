@@ -1405,7 +1405,8 @@ void dr_render(float *lr, uint32_t n)
         while (f < 38.0f) f *= 2.0f;
         dl_f += (f - dl_f) * clampf(bt * 4.0f, 0.0f, 1.0f);
         dl_hard = dlv > 0.6f ? (dlv - 0.6f) / 0.4f : 0.0f; dl_hard *= dl_hard;
-        if (dl_eout > 1e-5f) dl_gn += (clampf(dl_ein / dl_eout, 0.3f, 3.0f) - dl_gn) * 0.2f;
+        if (dl_eout > 1e-5f) dl_gn += (clampf(0.6f * dl_ein / dl_eout, 0.03f, 1.2f) - dl_gn) * 0.2f;   /* (under the level in: a
+                                                                                    * pinned wall and a sub sound louder than their level) */
     }
     if (vd > 0.001f && wet_env > 1e-5f) {                        /* VOID's wash held at the level it took */
         float t = clampf(void_ref * 0.9f / (wet_env / (void_wg > 0.01f ? void_wg : 1.0f) + 1e-5f), 0.5f, 4.0f);
