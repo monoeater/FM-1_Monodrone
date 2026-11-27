@@ -509,6 +509,10 @@ static uint32_t verb_at[4], verb_i[4], ap_i[4];
 static float verb_lp[4], verb_out[2], verb_prev[2], vmod_ph;
 static uint32_t half;                                            /* frame parity: the 22.05 kHz parts run on odd ones */
 static float punch_g[PU_N];
+/* the punches' guard: while any punch is in (and for its tail after), the output may not rise more than ~1.5 dB over
+ * the level it had just before; quieter is left alone. Every punch and pairing of them held to the scene's level */
+static float pg_out, pg_ref, pg_g = 1.0f;
+static int32_t pg_hold;
 /* the punches' own state */
 #define WB_N 2048u                                               /* WARBLE: 46 ms of the output, stereo */
 #define SD_N 4096u                                               /* SHIMMER DOWN: the pitch shifter's line, 22.05 kHz */
@@ -878,7 +882,7 @@ void dr_render(float *lr, uint32_t n)
     {
         float r = u7(E.macro[MC_ROT]), sp = u7(E.macro[MC_SPACE]);
         float ra = u7(E.macro[MC_RUNAWAY]), rf = u7(E.macro[MC_RUNOFF]), sv = j_starve;
-        mt_want = fm_exp2f(-(3.8f * r * r + 2.8f * sp * sp + 7.5f * ra * ra + 4.0f * rf * rf - 1.5f * sv) * (1.0f / 6.02f));
+        mt_want = fm_exp2f(-(3.8f * r * r + 4.5f * sp * sp + 4.5f * ra * ra + 9.0f * rf * rf - 1.5f * sv) * (1.0f / 6.02f));
     }
     j_tangle = u7(E.macro[MC_TANGLE]);
     for (i = 0; i < 6; i++) wv[i] = j_wv[i] = wander(&wx[i], wrate * (0.7f + 0.15f * (float)i), bt, &rng_state);
@@ -1113,6 +1117,9 @@ void dr_render(float *lr, uint32_t n)
         }
     } else st_target = 1.0f;
     float dlv = u7(E.macro[MC_DELUGE]);
+    int pg_on = 0;
+    for (i = 0; i < PU_N; i++) if (punch_g[i] > 0.01f) pg_on = 1;
+    if (pg_on) pg_hold = (int32_t)(SR * 3.0f);                    /* (and three seconds of its tail) */
     for (i = 0; i < n; i++) {
         float x[2] = {busL[i], busR[i]};
         /* RUNAWAY's and RUNOFF's loops: the output back in before the dirt */
@@ -1388,6 +1395,18 @@ void dr_render(float *lr, uint32_t n)
             dl_eout += (fm_fabsf(yl) + fm_fabsf(yr) - dl_eout) * 0.0008f;
             oL += (yl * dl_gn - oL) * dlv; oR += (yr * dl_gn - oR) * dlv;
         }
+        {
+            float e = fm_fabsf(oL) + fm_fabsf(oR);
+            pg_out += (e - pg_out) * (e > pg_out ? 0.004f : 0.0015f);
+            float want = 1.0f;
+            if (pg_on || pg_hold > 0) {
+                if (!pg_on) pg_hold--;
+                float r = pg_ref < 0.002f ? 0.002f : pg_ref;
+                if (pg_out * pg_g > r * 1.19f) want = clampf(r * 1.19f / (pg_out + 1e-6f), 0.25f, 1.0f);
+            } else pg_ref += (pg_out - pg_ref) * 0.0003f;          /* the level it had, over ~80 ms */
+            pg_g += (want - pg_g) * (want < pg_g ? 0.01f : 0.0006f);
+            oL *= pg_g; oR *= pg_g;
+        }
         mtrim += (mt_want - mtrim) * 0.0005f;
         oL *= mtrim; oR *= mtrim;
         /* out: DC blocked, limited (a peak over 0.9 pulls the gain at once; back over ~150 ms) */
@@ -1431,7 +1450,7 @@ void dr_render(float *lr, uint32_t n)
     }
     for (i = 0; i < 4; i++) FL(verb_lp[i]);
     for (i = 0; i < 2; i++) { FL(fl[i].ic1); FL(fl[i].ic2); FL(dc_x[i]); FL(dc_y[i]); FL(verb_out[i]); FL(dly_out[i]); FL(hold[i]); FL(void_lp[i]); }
-    FL(dly_lp); FL(dly_hp); FL(burn_eout); FL(hiss_crk); FL(sd_out); FL(sd_hp); FL(verb_lvl); FL(scr_fb[0]); FL(scr_fb[1]); FL(wb_lp[0]); FL(wb_lp[1]);
+    FL(dly_lp); FL(dly_hp); FL(burn_eout); FL(hiss_crk); FL(sd_out); FL(pg_out); FL(pg_ref); FL(sd_hp); FL(verb_lvl); FL(scr_fb[0]); FL(scr_fb[1]); FL(wb_lp[0]); FL(wb_lp[1]);
     /* the meters and the scope */
     {
         static float om;
