@@ -13,7 +13,7 @@
  *   PLAY         the scene's layers in / out      SEQ   the selected layer in / out
  *   ARP          FREEZE      REC   SMEAR's memory records (lit) or holds
  *   SAVE         the scene into its slot; held + a white key: into that slot      SEL held + a white key: recall
- *   OCT- OCT+    the keys' octave; with SEL held, the selected layer's chord an octave down/up */
+ *   OCT- OCT+    the keys' octave; with SEL held, the selected layer's chord an octave down/up; with GLO, every layer's */
 #include <stddef.h>
 #include "drone_dsp.h"
 #include "land.h"
@@ -807,7 +807,18 @@ static void input(void)
     }
     if ((bdown >> B_ARP) & 1u) { C->freeze = !C->freeze; app_say("FREEZE", C->freeze ? "ON" : "OFF"); }
     if ((bdown >> B_REC) & 1u) { C->capture = !C->capture; app_say("SMEAR MEMORY", C->capture ? "RECORDING" : "HELD"); }
-    if (sel_held && ((bdown >> B_OCTDN) & 1u || (bdown >> B_OCTUP) & 1u)) {
+    if (((btn >> B_GLO) & 1u) && ((bdown >> B_OCTDN) & 1u || (bdown >> B_OCTUP) & 1u)) {
+        /* GLO + OCT: every layer's chord a whole octave down or up together (none moves if one would run off the end) */
+        int32_t d = ((bdown >> B_OCTUP) & 1u) ? 12 : -12, ok = 1;
+        for (uint32_t li = 0; li < DR_LAYERS; li++)
+            for (uint32_t j = 0; j < DR_VOICES; j++) if ((int32_t)C->L[li].note[j] + d < 12 || (int32_t)C->L[li].note[j] + d > 108) ok = 0;
+        if (ok) for (uint32_t li = 0; li < DR_LAYERS; li++) for (uint32_t j = 0; j < DR_VOICES; j++) {
+            C->L[li].note[j] = (uint8_t)(C->L[li].note[j] + d);
+            if (spring_on) spring.L[li].note[j] = C->L[li].note[j];
+        }
+        app_say("ALL LAYERS", !ok ? "AT THE END" : d > 0 ? "OCTAVE UP" : "OCTAVE DOWN");
+    }
+    else if (sel_held && ((bdown >> B_OCTDN) & 1u || (bdown >> B_OCTUP) & 1u)) {
         /* SEL + OCT: the selected layer's chord a whole octave down or up (the voices glide there); kept when SEL goes */
         int32_t d = ((bdown >> B_OCTUP) & 1u) ? 12 : -12, ok = 1;
         dr_layer_t *l = &C->L[ui.sel];

@@ -1,0 +1,19 @@
+# GLO + OCT-/OCT+: every layer's chord moves an octave together; the keyboard octave doesn't
+wait 1000
+expect note0 29
+expect note1 31
+expect octave -2
+press GLO
+tap OCT+
+release GLO
+wait 100
+expect note0 41
+expect note1 43
+expect octave -2
+press GLO
+tap OCT-
+tap OCT-
+release GLO
+wait 100
+expect note0 17
+expect note1 19

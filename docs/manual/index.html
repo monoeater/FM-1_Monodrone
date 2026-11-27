@@ -231,7 +231,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="prose">
       <h3>CHORDS THAT STAY</h3>
       <p>Every key plays a note on the selected layer. Keys held together build a chord of up to four notes; a fifth replaces the last. Let go and the chord keeps sounding. The next key you play afresh starts a new chord, and the voices glide from the old notes to the new over the layer's GLIDE time (3 ms by default).</p>
-      <p>Press harder on a held key and the chord swells louder and brighter. <span class="k">OCT−</span> <span class="k">OCT+</span> move the keyboard through six octave positions; it starts on F1–G3. Hold <span class="k">SEL</span> and tap them to move the selected layer's chord itself an octave down or up.</p>
+      <p>Press harder on a held key and the chord swells louder and brighter. <span class="k">OCT−</span> <span class="k">OCT+</span> move the keyboard through six octave positions; it starts on F1–G3. Hold <span class="k">SEL</span> and tap them to move the selected layer's chord itself an octave down or up; hold <span class="k">GLO</span> to move every layer's chord together.</p>
       <h3>FOUR LAYERS</h3>
       <p><span class="k">SELECT</span> picks layer 1–4, and <span class="k">ALGORITHM</span> changes its engine. While you hold a chord, the knobs and ALGORITHM act on that chord's layer.</p>
       <p><span class="k">PLAY</span> brings the whole scene in or out and remembers which layers were in. <span class="k">SEQ</span> brings the selected layer in or out. Hold <span class="k">GLO</span> and tap white keys 1–4 to bring single layers in or out. Changing notes never brings a layer back in.</p>
@@ -515,10 +515,12 @@ for(let i=0;i<4;i++){
 add('OCTDN','OCT−','The keyboard\'s octave, down.','s_layer',[
  ['','Tap','The keys play an octave lower (six positions; starts on F1–G3).'],
  ['SEL','Tap (SEL held)','The selected layer\'s chord moves down an octave, gliding there. It stays when you let go.'],
+ ['GLO','Tap (GLO held)','Every layer\'s chord moves down an octave together.'],
  ['','Hold at power-on','Starts the FM-1\'s updater, to install other firmware.']]);
 add('OCTUP','OCT+','The keyboard\'s octave, up.','s_layer',[
  ['','Tap','The keys play an octave higher.'],
- ['SEL','Tap (SEL held)','The selected layer\'s chord moves up an octave, gliding there. It stays when you let go.']]);
+ ['SEL','Tap (SEL held)','The selected layer\'s chord moves up an octave, gliding there. It stays when you let go.'],
+ ['GLO','Tap (GLO held)','Every layer\'s chord moves up an octave together.']]);
 add('FX','FX','Effects: a mode for the keys.','s_dirt',[
  ['','Tap','FX mode on (lit): the keys switch the punch effects, ALGORITHM turns the effects pages, and the screen shows DIRT, FILTER, DELAY or REVERB.'],
  ['FX','Tap (in FX mode)','The next effects page: DIRT, FILTER, DELAY, REVERB, round. From another page (EDIT, a macro), back to the effects. HOME leaves FX mode.']]);
@@ -538,6 +540,7 @@ add('EDIT','EDIT','The layer\'s shape.','s_shape',[
 add('GLO','GLO','All four layers.','s_mix',[
  ['','Tap','MIX (the four levels); again PAN (the four pans).'],
  ['GLO','Hold + white keys 1–4','Bring layer 1–4 in or out.'],
+ ['GLO','Hold + OCT− / OCT+','Every layer\'s chord an octave down or up together.'],
  ['ENV','Tap (ENV held)','Every macro off.']]);
 add('HOME','HOME','The layer\'s pages.','s_layer',[
  ['','Tap','LAYER, then SHAPE, then OUT, then LAYER again.'],
